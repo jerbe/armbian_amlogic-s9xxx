@@ -1,0 +1,1086 @@
+#!/bin/bash
+#================================================================================================
+#
+# This file is licensed under the terms of the GNU General Public
+# License version 2. This program is licensed "as is" without any
+# warranty of any kind, whether express or implied.
+#
+# This file is a part of the Rebuild Armbian
+# https://github.com/ophub/amlogic-s9xxx-armbian
+#
+# Description: Run on x86_64 Ubuntu-20.04/22.04, Rebuild armbian.
+# Copyright (C) 2021~ https://www.armbian.com
+# Copyright (C) 2021~ https://github.com/unifreq
+# Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-armbian/blob/main/CONTRIBUTORS.md
+# Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-armbian
+#
+# Command: sudo ./rebuild
+# Command optional parameters please refer to the source code repository
+#
+#======================================== Functions list ========================================
+#
+# error_msg          : Output error message
+# process_msg        : Output process message
+# get_textoffset     : Get kernel TEXT_OFFSET
+#
+# init_var           : Initialize all variables
+# find_armbian       : Find Armbian file (build/output/images/*.img)
+# download_depends   : Download the dependency files
+# query_version      : Query the latest kernel version
+# check_kernel       : Check kernel files integrity
+# download_kernel    : Download the latest kernel
+#
+# confirm_version    : Confirm version type
+# extract_armbian    : Extract Armbian files
+# make_image         : Making Armbian file
+# copy_files         : Copy the Armbian files
+# replace_kernel     : Replace kernel files
+# refactor_bootfs    : Refactor bootfs files
+# refactor_rootfs    : Refactor rootfs files
+# clean_tmp          : Clear temporary files
+#
+# loop_rebuild       : Loop to rebuild Armbian files
+#
+#================================ Set make environment variables ================================
+#
+# Related file storage path
+current_path="${PWD}"
+armbian_outputpath="${current_path}/build/output/images"
+armbian_rebuild_file="${armbian_outputpath}/*.img"
+build_path="${current_path}/build-armbian"
+kernel_path="${build_path}/kernel"
+uboot_path="${build_path}/u-boot"
+common_files="${build_path}/armbian-files/common-files"
+platform_files="${build_path}/armbian-files/platform-files"
+different_files="${build_path}/armbian-files/different-files"
+model_conf="${common_files}/etc/model_database.conf"
+firmware_path="${common_files}/usr/lib/firmware"
+tmp_dir="${current_path}/tmp_dir"
+tmp_outpath="${tmp_dir}/tmp_out"
+tmp_armbian="${tmp_dir}/tmp_armbian"
+tmp_build="${tmp_dir}/tmp_build"
+tmp_aml_image="${tmp_dir}/tmp_aml_image"
+
+# System operation environment
+arch_info="$(uname -m)"
+host_release="$(cat /etc/os-release | grep '^VERSION_CODENAME=.*' | cut -d'=' -f2)"
+# Get armbian ${VERSION_CODENAME}: such as [ jammy ]
+os_release_file="etc/os-release"
+# Set banner's ${BOARD_NAME}: such as [ s905x3 ]
+armbian_release_file="etc/armbian-release"
+# Add custom armbian information
+ophub_release_file="etc/ophub-release"
+
+# Firmware files download repository
+firmware_repo="https://github.com/ophub/firmware/tree/main/firmware"
+# Convert firmware repository address to svn format
+firmware_repo="${firmware_repo//tree\/main/trunk}"
+
+# Set the kernel download repository from github.com
+kernel_repo="ophub/kernel"
+# Set the list of kernels used by default
+stable_kernel=("6.1.1" "5.15.1")
+rk3588_kernel=("5.10.1")
+h6_kernel=("6.1.1")
+# Set to automatically use the latest kernel
+auto_kernel="true"
+
+# Initialize the build device
+build_board="all"
+
+# Set Armbian size (Unit: MiB, boot_mb >= 256, root_mb >= 2048)
+boot_mb="256"
+root_mb="2560"
+# Set ROOTFS partition file system type, options: [ ext4 / btrfs ]
+rootfs_type="ext4"
+# Custom name in Armbian file: ${build_image_file}, such as _server, _dev, etc.
+custom_name="_server"
+
+# Get gh_token for api.github.com
+gh_token=""
+
+# Set font color
+STEPS="[\033[95m STEPS \033[0m]"
+INFO="[\033[94m INFO \033[0m]"
+TIPS="[\033[93m TIPS \033[0m]"
+WARNING="[\033[93m WARNING \033[0m]"
+SUCCESS="[\033[92m SUCCESS \033[0m]"
+ERROR="[\033[91m ERROR \033[0m]"
+#
+#================================================================================================
+
+error_msg() {
+    echo -e "${ERROR} ${1}"
+    exit 1
+}
+
+process_msg() {
+    echo -e " [\033[1;92m ${board} - ${kernel} \033[0m] ${1}"
+}
+
+get_textoffset() {
+    vmlinuz_name="${1}"
+    need_overload="yes"
+    # With TEXT_OFFSET patch is [ 0108 ], without TEXT_OFFSET patch is [ 0000 ] and need to ues [ UBOOT_OVERLOAD ] file.
+    [[ "$(hexdump -n 15 -x "${vmlinuz_name}" 2>/dev/null | head -n 1 | awk '{print $7}')" == "0108" ]] && need_overload="no"
+}
+
+init_var() {
+    echo -e "${STEPS} Start Initializing Variables..."
+
+    # If it is followed by [ : ], it means that the option requires a parameter value
+    get_all_ver="$(getopt "b:k:a:r:s:t:n:g:" "${@}")"
+
+    while [[ -n "${1}" ]]; do
+        case "${1}" in
+        -b | --Board)
+            if [[ -n "${2}" ]]; then
+                build_board="${2}"
+                shift
+            else
+                error_msg "Invalid -b parameter [ ${2} ]!"
+            fi
+            ;;
+        -k | --Kernel)
+            if [[ -n "${2}" ]]; then
+                oldIFS=${IFS}
+                IFS=_
+                stable_kernel=(${2})
+                IFS=${oldIFS}
+                shift
+            else
+                error_msg "Invalid -k parameter [ ${2} ]!"
+            fi
+            ;;
+        -a | --Autokernel)
+            if [[ -n "${2}" ]]; then
+                auto_kernel="${2}"
+                shift
+            else
+                error_msg "Invalid -a parameter [ ${2} ]!"
+            fi
+            ;;
+        -r | --kernelRepository)
+            if [[ -n "${2}" ]]; then
+                kernel_repo="${2}"
+                shift
+            else
+                error_msg "Invalid -r parameter [ ${2} ]!"
+            fi
+            ;;
+        -s | --Size)
+            if [[ -n "${2}" && "${2}" -ge "2048" ]]; then
+                root_mb="${2}"
+                shift
+            else
+                error_msg "Invalid -s parameter [ ${2} ]!"
+            fi
+            ;;
+        -t | --rootfsType)
+            if [[ -n "${2}" ]]; then
+                rootfs_type="${2}"
+                shift
+            else
+                error_msg "Invalid -t parameter [ ${2} ]!"
+            fi
+            ;;
+        -n | --customName)
+            if [[ -n "${2}" ]]; then
+                custom_name="${2// /}"
+                shift
+            else
+                error_msg "Invalid -n parameter [ ${2} ]!"
+            fi
+            ;;
+        -g | --Gh_token)
+            if [[ -n "${2}" ]]; then
+                gh_token="${2}"
+                shift
+            else
+                error_msg "Invalid -g parameter [ ${2} ]!"
+            fi
+            ;;
+        *)
+            error_msg "Invalid option [ ${1} ]!"
+            ;;
+        esac
+        shift
+    done
+
+    # Columns of ${model_conf}:
+    # 1.ID  2.MODEL  3.SOC  4.FDTFILE  5.UBOOT_OVERLOAD  6.MAINLINE_UBOOT  7.BOOTLOADER_IMG
+    # 8.KERNEL_TAGS  9.PLATFORM  10.FAMILY  11.BOOT_CONF 12.BOARD  13.BUILD
+
+    # Get a list of build devices
+    if [[ "${build_board}" == "all" ]]; then
+        board_list=""
+        build_armbian=($(
+            cat ${model_conf} |
+                sed -e 's/NA//g' -e 's/NULL//g' -e 's/[ ][ ]*//g' |
+                grep -E "^[^#].*:yes$" | awk -F':' '{print $12}' |
+                sort | uniq | xargs
+        ))
+    else
+        board_list=":($(echo ${build_board} | sed -e 's/_/\|/g'))"
+        build_armbian=($(echo ${build_board} | sed -e 's/_/ /g'))
+    fi
+    [[ "${#build_armbian[*]}" -eq "0" ]] && error_msg "The [ BOARD ] is missing, stop building."
+
+    # Get a list of kernel
+    kernel_from=($(
+        cat ${model_conf} |
+            sed -e 's/NA//g' -e 's/NULL//g' -e 's/[ ][ ]*//g' -e 's/\.y/\.1/g' |
+            grep -E "^[^#].*${board_list}:yes$" | awk -F':' '{print $8}' |
+            sort | uniq | xargs
+    ))
+    [[ "${#kernel_from[*]}" -eq "0" ]] && error_msg "Missing [ KERNEL_TAGS ] settings, stop building."
+
+    # The [ specified kernel ], Use the [ kernel version number ], such as 5.15.y, 6.1.y, etc. download from [ kernel_stable ].
+    specify_kernel=($(echo ${kernel_from[*]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[0-9]+" | sort | uniq | xargs))
+
+    # The [ suffix ] of KERNEL_TAGS starts with a [ letter ], such as kernel_stable, kernel_rk3588, kernel_h6, etc.
+    tags_list=($(echo ${kernel_from[*]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[a-z]" | sort | uniq | xargs))
+    # Add the specified kernel to the list
+    [[ "${#specify_kernel[*]}" -ne "0" ]] && tags_list=(${tags_list[*]} "specify")
+    # Check the kernel list
+    [[ "${#tags_list[*]}" -eq "0" ]] && error_msg "The [ tags_list ] is missing, stop building."
+
+    # Convert kernel repository address to api format
+    [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
+    kernel_api="https://api.github.com/repos/${kernel_repo}"
+}
+
+find_armbian() {
+    cd ${current_path}
+    echo -e "${STEPS} Start searching for Armbian file..."
+
+    # Get armbian release and version
+    armbian_rebuild_name="$(ls ${armbian_rebuild_file} 2>/dev/null | head -n 1 | awk -F "/" '{print $NF}')"
+    [[ -n "${armbian_rebuild_name}" ]] || error_msg "The armbian original file does not exist: [ ${armbian_rebuild_file} ]"
+
+    # Find armbian version info: such as [ 22.02.0 ]
+    armbian_rebuild_version="$(echo ${armbian_rebuild_name} | grep -oE '[2-9][0-9]\.[0-9]{1,2}\.[0-9]{1,2}' | head -n 1)"
+    [[ -n "${armbian_rebuild_version}" ]] || {
+        armbian_rebuild_version="22.02.02"
+        echo -e "${WARNING} Missing armbian version info!"
+    }
+
+    echo -e "${INFO} Armbian rebuild file: [ ${armbian_rebuild_name} ], Version: [ ${armbian_rebuild_version} ]"
+}
+
+download_depends() {
+    cd ${current_path}
+    echo -e "${STEPS} Start downloading dependency files..."
+
+    # Download Armbian firmware files
+    svn co ${firmware_repo} ${firmware_path} --force --quiet
+}
+
+query_version() {
+    echo -e "${STEPS} Start querying the latest kernel version for [ $(echo ${tags_list[*]} | xargs) ]..."
+
+    # Check the version on the kernel repository
+    x="1"
+    for k in ${tags_list[*]}; do
+        {
+            # Select the corresponding kernel directory and list
+            kd="${k}"
+            if [[ "${k}" == "rk3588" ]]; then
+                down_kernel_list=(${rk3588_kernel[*]})
+            elif [[ "${k}" == "h6" ]]; then
+                down_kernel_list=(${h6_kernel[*]})
+            elif [[ "${k}" == "specify" ]]; then
+                kd="stable"
+                down_kernel_list=(${specify_kernel[*]})
+            else
+                down_kernel_list=(${stable_kernel[*]})
+            fi
+
+            # Query the name of the latest kernel version
+            tmp_arr_kernels=()
+            i=1
+            for kernel_var in ${down_kernel_list[*]}; do
+                echo -e "${INFO} (${x}.${i}) Auto query the latest kernel version of the same series for [ ${k} - ${kernel_var} ]"
+
+                # Identify the kernel <VERSION> and <PATCHLEVEL>, such as [ 6.1 ]
+                kernel_verpatch="$(echo ${kernel_var} | awk -F '.' '{print $1"."$2}')"
+
+                if [[ -n "${gh_token}" ]]; then
+                    latest_version="$(
+                        curl -s \
+                            -H "Accept: application/vnd.github+json" \
+                            -H "Authorization: Bearer ${gh_token}" \
+                            ${kernel_api}/releases/tags/kernel_${kd} |
+                            jq -r '.assets[].name' |
+                            grep -oE "${kernel_verpatch}\.[0-9]+" |
+                            sort -rV | head -n 1
+                    )"
+                    query_api="Authenticated user request"
+                else
+                    latest_version="$(
+                        curl -s \
+                            -H "Accept: application/vnd.github+json" \
+                            ${kernel_api}/releases/tags/kernel_${kd} |
+                            jq -r '.assets[].name' |
+                            grep -oE "${kernel_verpatch}\.[0-9]+" |
+                            sort -rV | head -n 1
+                    )"
+                    query_api="Unauthenticated user request"
+                fi
+
+                if [[ "${?}" -eq "0" && -n "${latest_version}" ]]; then
+                    tmp_arr_kernels[${i}]="${latest_version}"
+                else
+                    tmp_arr_kernels[${i}]="${kernel_var}"
+                fi
+
+                echo -e "${INFO} (${x}.${i}) [ ${k} - ${tmp_arr_kernels[$i]} ] is latest kernel (${query_api}). \n"
+
+                let i++
+            done
+
+            # Reset the kernel array to the latest kernel version
+            if [[ "${k}" == "rk3588" ]]; then
+                unset rk3588_kernel
+                rk3588_kernel=(${tmp_arr_kernels[*]})
+            elif [[ "${k}" == "h6" ]]; then
+                unset h6_kernel
+                h6_kernel=(${tmp_arr_kernels[*]})
+            elif [[ "${k}" == "specify" ]]; then
+                unset specify_kernel
+                specify_kernel=(${tmp_arr_kernels[*]})
+            else
+                unset stable_kernel
+                stable_kernel=(${tmp_arr_kernels[*]})
+            fi
+
+            let x++
+        }
+    done
+}
+
+check_kernel() {
+    [[ -n "${1}" ]] && check_path="${1}" || error_msg "Invalid kernel path to check."
+    check_files=($(cat "${check_path}/sha256sums" | awk '{print $2}'))
+    for cf in ${check_files[*]}; do
+        {
+            # Check if file exists
+            [[ -s "${check_path}/${cf}" ]] || error_msg "The [ ${cf} ] file is missing."
+            # Check if the file sha256sum is correct
+            tmp_sha256sum="$(sha256sum "${check_path}/${cf}" | awk '{print $1}')"
+            tmp_checkcode="$(cat ${check_path}/sha256sums | grep ${cf} | awk '{print $1}')"
+            [[ "${tmp_sha256sum}" == "${tmp_checkcode}" ]] || error_msg "[ ${cf} ]: sha256sum verification failed."
+        }
+    done
+    echo -e "${INFO} All [ ${#check_files[*]} ] kernel files are sha256sum checked to be complete.\n"
+}
+
+download_kernel() {
+    cd ${current_path}
+    echo -e "${STEPS} Start downloading the kernel files for [ $(echo ${tags_list[*]} | xargs) ]..."
+
+    x="1"
+    for k in ${tags_list[*]}; do
+        {
+            # Set the kernel download list
+            kd="${k}"
+            if [[ "${k}" == "rk3588" ]]; then
+                down_kernel_list=(${rk3588_kernel[*]})
+            elif [[ "${k}" == "h6" ]]; then
+                down_kernel_list=(${h6_kernel[*]})
+            elif [[ "${k}" == "specify" ]]; then
+                down_kernel_list=(${specify_kernel[*]})
+                kd="stable"
+            else
+                down_kernel_list=(${stable_kernel[*]})
+            fi
+
+            # Download the kernel to the storage directory
+            i="1"
+            for kernel_var in ${down_kernel_list[*]}; do
+                if [[ ! -d "${kernel_path}/${kd}/${kernel_var}" ]]; then
+                    kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kd}/${kernel_var}.tar.gz"
+                    echo -e "${INFO} (${x}.${i}) [ ${k} - ${kernel_var} ] Kernel download from [ ${kernel_down_from} ]"
+
+                    mkdir -p ${kernel_path}/${kd}
+                    wget "${kernel_down_from}" -q -P "${kernel_path}/${kd}"
+                    [[ "${?}" -ne "0" ]] && error_msg "Failed to download the kernel files from the server."
+
+                    tar -xf "${kernel_path}/${kd}/${kernel_var}.tar.gz" -C "${kernel_path}/${kd}"
+                    [[ "${?}" -ne "0" ]] && error_msg "[ ${kernel_var} ] kernel decompression failed."
+                else
+                    echo -e "${INFO} (${x}.${i}) [ ${k} - ${kernel_var} ] Kernel is in the local directory."
+                fi
+
+                # If the kernel contains the sha256sums file, check the files integrity
+                [[ -f "${kernel_path}/${kd}/${kernel_var}/sha256sums" ]] && check_kernel "${kernel_path}/${kd}/${kernel_var}"
+
+                let i++
+            done
+
+            # Delete downloaded kernel temporary files
+            rm -f ${kernel_path}/${kd}/*.tar.gz
+            sync
+
+            let x++
+        }
+    done
+}
+
+confirm_version() {
+    cd ${current_path}
+
+    # Columns of ${model_conf}:
+    # 1.ID  2.MODEL  3.SOC  4.FDTFILE  5.UBOOT_OVERLOAD  6.MAINLINE_UBOOT  7.BOOTLOADER_IMG
+    # 8.KERNEL_TAGS  9.PLATFORM  10.FAMILY  11.BOOT_CONF 12.BOARD  13.BUILD
+    # Column 5, called <UBOOT_OVERLOAD> in Amlogic, <TRUST_IMG> in Rockchip, Not used in Allwinner.
+
+    # Find [ the first ] configuration information with [ the same BOARD name ] and [ BUILD as yes ] in the ${model_conf} file.
+    [[ -f "${model_conf}" ]] || error_msg "[ ${model_conf} ] file is missing!"
+    board_conf="$(
+        cat ${model_conf} |
+            sed -e 's/NA//g' -e 's/NULL//g' -e 's/[ ][ ]*//g' |
+            grep -E "^[^#].*:${board}:yes$" |
+            head -n 1
+    )"
+    [[ -n "${board_conf}" ]] || error_msg "[ ${board} ] config is missing!"
+
+    # Get device settings options
+    SOC="$(echo ${board_conf} | awk -F':' '{print $3}')"
+    FDTFILE="$(echo ${board_conf} | awk -F':' '{print $4}')"
+    UBOOT_OVERLOAD="$(echo ${board_conf} | awk -F':' '{print $5}')"
+    TRUST_IMG="${UBOOT_OVERLOAD}"
+    MAINLINE_UBOOT="$(echo ${board_conf} | awk -F':' '{print $6}')"
+    BOOTLOADER_IMG="$(echo ${board_conf} | awk -F':' '{print $7}')"
+    KERNEL_TAGS="$(echo ${board_conf} | awk -F':' '{print $8}')"
+    PLATFORM="$(echo ${board_conf} | awk -F':' '{print $9}')"
+    FAMILY="$(echo ${board_conf} | awk -F':' '{print $10}')"
+    BOOT_CONF="$(echo ${board_conf} | awk -F':' '{print $11}')"
+
+    # Check whether the key parameters are correct
+    [[ -n "${PLATFORM}" ]] || error_msg "Invalid PLATFORM parameter: [ ${PLATFORM} ]"
+    # Set supported platform name
+    support_platform=("amlogic" "rockchip" "allwinner")
+    [[ -n "$(echo "${support_platform[*]}" | grep -w "${PLATFORM}")" ]] || error_msg "[ ${PLATFORM} ] not supported."
+}
+
+extract_armbian() {
+    process_msg " (1/7) Extract armbian files."
+    cd ${current_path}
+
+    rm -rf ${tmp_dir}
+    mkdir -p ${tmp_outpath} ${tmp_armbian} ${tmp_build} ${tmp_aml_image}
+
+    armbian_image_file="${tmp_aml_image}/armbian_${board}_${kernel}.img"
+    rm -f ${armbian_image_file}
+    cp -f "${armbian_outputpath}/${armbian_rebuild_name}" "${armbian_image_file}"
+
+    loop_old="$(losetup -P -f --show "${armbian_image_file}")"
+    [[ -n "${loop_old}" ]] || error_msg "losetup ${armbian_image_file} failed."
+
+    mount -o discard ${loop_old}p1 ${tmp_armbian}
+    [[ "${?}" -eq "0" ]] || error_msg "mount ${loop_old}p1 failed!"
+
+    cd ${tmp_armbian}
+
+    # Find ID in ${os_release_file}: such as [ubuntu/debian]
+    release_codeid="$(cat ${os_release_file} | grep -oE "^ID=.*" | cut -d"=" -f2)"
+    [[ -z "${release_codeid}" ]] && error_msg "The [ ${os_release_file}: ID ] is invalid."
+    # Find VERSION_CODENAME in ${os_release_file}: such as [jammy/focal/bullseye]
+    release_codename="$(cat ${os_release_file} | grep -oE "^VERSION_CODENAME=.*" | cut -d"=" -f2)"
+    [[ -z "${release_codename}" ]] && error_msg "The [ ${os_release_file}: VERSION_CODENAME ] is invalid."
+
+    # Delete all files of /boot partition and replace it later
+    rm -rf boot/*
+    # Delete the kernel files and replace it later
+    rm -rf usr/lib/modules/*
+    # Delete the symbolic link files and relink it later
+    rm -rf bin lib sbin var/lock var/run
+}
+
+make_image() {
+    process_msg " (2/7) Make new armbian image."
+    cd ${current_path}
+
+    # Set Armbian image file parameters
+    [[ "${PLATFORM}" == "amlogic" ]] && {
+        skip_mb="4"
+        partition_table_type="msdos"
+        bootfs_type="fat32"
+    }
+    [[ "${PLATFORM}" == "rockchip" ]] && {
+        skip_mb="16"
+        partition_table_type="gpt"
+        bootfs_type="ext4"
+    }
+    [[ "${PLATFORM}" == "allwinner" ]] && {
+        skip_mb="16"
+        partition_table_type="msdos"
+        bootfs_type="fat32"
+    }
+
+    # Set Armian file name
+    build_image_file="${tmp_outpath}/Armbian_${armbian_rebuild_version}_${PLATFORM}_${board}_${release_codename}_${kernel}${custom_name}_$(date +"%Y.%m.%d").img"
+    rm -f ${build_image_file}
+
+    IMG_SIZE="$((skip_mb + boot_mb + root_mb))"
+    truncate -s ${IMG_SIZE}M ${build_image_file} >/dev/null 2>&1
+
+    parted -s ${build_image_file} mklabel ${partition_table_type} 2>/dev/null
+    parted -s ${build_image_file} mkpart primary ${bootfs_type} $((skip_mb))MiB $((skip_mb + boot_mb - 1))MiB 2>/dev/null
+    parted -s ${build_image_file} mkpart primary ${rootfs_type} $((skip_mb + boot_mb))MiB 100% 2>/dev/null
+
+    loop_new="$(losetup -P -f --show "${build_image_file}")"
+    [[ -n "${loop_new}" ]] || error_msg "losetup ${build_image_file} failed."
+
+    # Confirm BOOT_UUID
+    BOOT_UUID="$(cat /proc/sys/kernel/random/uuid)"
+    [[ -z "${BOOT_UUID}" ]] && BOOT_UUID="$(uuidgen)"
+    [[ -z "${BOOT_UUID}" ]] && error_msg "The uuidgen is invalid, cannot continue."
+    # Confirm ROOTFS_UUID
+    ROOTFS_UUID="$(cat /proc/sys/kernel/random/uuid)"
+    [[ -z "${ROOTFS_UUID}" ]] && ROOTFS_UUID="$(uuidgen)"
+    [[ -z "${ROOTFS_UUID}" ]] && error_msg "The uuidgen is invalid, cannot continue."
+
+    # Format bootfs partition
+    if [[ "${bootfs_type}" == "fat32" ]]; then
+        mkfs.vfat -F 32 -n "BOOT" ${loop_new}p1 >/dev/null 2>&1
+    else
+        mkfs.ext4 -F -q -U ${BOOT_UUID} -L "BOOT" -b 4k -m 0 ${loop_new}p1 >/dev/null 2>&1
+    fi
+
+    # Format rootfs partition
+    if [[ "${rootfs_type}" == "btrfs" ]]; then
+        mkfs.btrfs -f -U ${ROOTFS_UUID} -L "ROOTFS" -m single ${loop_new}p2 >/dev/null 2>&1
+    else
+        mkfs.ext4 -F -q -U ${ROOTFS_UUID} -L "ROOTFS" -b 4k -m 0 ${loop_new}p2 >/dev/null 2>&1
+    fi
+
+    # Write the specified bootloader for [ Amlogic ] boxes
+    [[ "${PLATFORM}" == "amlogic" ]] && {
+        bootloader_path="${uboot_path}/${PLATFORM}/bootloader"
+        if [[ -n "${MAINLINE_UBOOT}" && -f "${bootloader_path}/${MAINLINE_UBOOT}" ]]; then
+            dd if="${bootloader_path}/${MAINLINE_UBOOT}" of="${loop_new}" conv=fsync bs=1 count=444 2>/dev/null
+            dd if="${bootloader_path}/${MAINLINE_UBOOT}" of="${loop_new}" conv=fsync bs=512 skip=1 seek=1 2>/dev/null
+            #echo -e "${INFO} 01. For [ ${board} ] write bootloader: ${MAINLINE_UBOOT}"
+        elif [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]]; then
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync bs=1 count=444 2>/dev/null
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync bs=512 skip=1 seek=1 2>/dev/null
+            #echo -e "${INFO} 02. For [ ${board} ] write bootloader: ${BOOTLOADER_IMG}"
+        fi
+    }
+
+    # Write the specified bootloader for [ Rockchip ] boxes
+    [[ "${PLATFORM}" == "rockchip" ]] && {
+        bootloader_path="${uboot_path}/${PLATFORM}/${board}"
+        if [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]] &&
+            [[ -n "${MAINLINE_UBOOT}" && -f "${bootloader_path}/${MAINLINE_UBOOT}" ]] &&
+            [[ -n "${TRUST_IMG}" && -f "${bootloader_path}/${TRUST_IMG}" ]]; then
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync,notrunc bs=512 seek=64 2>/dev/null
+            dd if="${bootloader_path}/${MAINLINE_UBOOT}" of="${loop_new}" conv=fsync,notrunc bs=512 seek=16384 2>/dev/null
+            dd if="${bootloader_path}/${TRUST_IMG}" of="${loop_new}" conv=fsync,notrunc bs=512 seek=24576 2>/dev/null
+            #echo -e "${INFO} 01. For [ ${board} ] write bootloader: ${TRUST_IMG}"
+        elif [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]] &&
+            [[ -n "${MAINLINE_UBOOT}" && -f "${bootloader_path}/${MAINLINE_UBOOT}" ]]; then
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync,notrunc bs=512 seek=64 2>/dev/null
+            dd if="${bootloader_path}/${MAINLINE_UBOOT}" of="${loop_new}" conv=fsync,notrunc bs=512 seek=16384 2>/dev/null
+            #echo -e "${INFO} 02. For [ ${board} ] write bootloader: ${MAINLINE_UBOOT}"
+        elif [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]]; then
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync,notrunc bs=512 skip=64 seek=64 2>/dev/null
+            #echo -e "${INFO} 03. For [ ${board} ] write bootloader: ${BOOTLOADER_IMG}"
+        fi
+    }
+
+    # Write the specified bootloader for [ Allwinner ] boxes
+    [[ "${PLATFORM}" == "allwinner" ]] && {
+        bootloader_path="${uboot_path}/${PLATFORM}/${board}"
+        if [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]] &&
+            [[ -n "${MAINLINE_UBOOT}" && -f "${bootloader_path}/${MAINLINE_UBOOT}" ]]; then
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync,notrunc bs=8k seek=1 2>/dev/null
+            dd if="${bootloader_path}/${MAINLINE_UBOOT}" of="${loop_new}" conv=fsync,notrunc bs=8k seek=5 2>/dev/null
+            #echo -e "${INFO} 01. For [ ${board} ] write bootloader: ${MAINLINE_UBOOT}"
+        elif [[ -n "${BOOTLOADER_IMG}" && -f "${bootloader_path}/${BOOTLOADER_IMG}" ]]; then
+            dd if=/dev/zero of="${loop_new}" bs=1k count=1023 seek=1 status=noxfer 2>/dev/null
+            dd if="${bootloader_path}/${BOOTLOADER_IMG}" of="${loop_new}" conv=fsync,notrunc bs=8k seek=1 2>/dev/null
+            #echo -e "${INFO} 02. For [ ${board} ] write bootloader: ${BOOTLOADER_IMG}"
+        fi
+    }
+}
+
+copy_files() {
+    process_msg " (3/7) Copy the Armbian files."
+    cd ${current_path}
+
+    # Create a dual-partition general directory
+    tag_bootfs="${tmp_build}/bootfs"
+    tag_rootfs="${tmp_build}/rootfs"
+    mkdir -p ${tag_bootfs} ${tag_rootfs}
+
+    # Mount bootfs
+    if [[ "${bootfs_type}" == "fat32" ]]; then
+        mount -t vfat -o discard ${loop_new}p1 ${tag_bootfs}
+    else
+        mount -t ext4 -o discard ${loop_new}p1 ${tag_bootfs}
+    fi
+    [[ "${?}" -eq "0" ]] || error_msg "mount ${loop_new}p1 failed!"
+
+    # Mount rootfs
+    if [[ "${rootfs_type}" == "btrfs" ]]; then
+        mount -t btrfs -o discard,compress=zstd:6 ${loop_new}p2 ${tag_rootfs}
+    else
+        mount -t ext4 -o discard ${loop_new}p2 ${tag_rootfs}
+    fi
+    [[ "${?}" -eq "0" ]] || error_msg "mount ${loop_new}p2 failed!"
+
+    # Copy the full Armbian image
+    cp -af ${tmp_armbian}/* ${tag_rootfs}
+
+    # Copy the common files
+    [[ -d "${common_files}" ]] && cp -rf ${common_files}/* ${tag_rootfs}
+
+    # Copy the platform files
+    platform_bootfs="${platform_files}/${PLATFORM}/bootfs"
+    platform_rootfs="${platform_files}/${PLATFORM}/rootfs"
+    [[ -d "${platform_bootfs}" ]] && cp -rf ${platform_bootfs}/* ${tag_bootfs}
+    [[ -d "${platform_rootfs}" ]] && cp -rf ${platform_rootfs}/* ${tag_rootfs}
+
+    # Copy the different files
+    different_bootfs="${different_files}/${board}/bootfs"
+    different_rootfs="${different_files}/${board}/rootfs"
+    [[ -d "${different_bootfs}" ]] && cp -rf ${different_bootfs}/* ${tag_bootfs}
+    [[ -d "${different_rootfs}" ]] && cp -rf ${different_rootfs}/* ${tag_rootfs}
+
+    # Copy the bootloader files
+    [[ -d "${tag_rootfs}/usr/lib/u-boot" ]] || mkdir -p ${tag_rootfs}/usr/lib/u-boot
+    rm -rf ${tag_rootfs}/usr/lib/u-boot/*
+    [[ -d "${bootloader_path}" ]] && cp -rf ${bootloader_path}/* ${tag_rootfs}/usr/lib/u-boot
+
+    # Copy the overload files
+    [[ "${PLATFORM}" == "amlogic" ]] && cp -rf ${uboot_path}/amlogic/overload/* ${tag_bootfs}
+}
+
+replace_kernel() {
+    process_msg " (4/7) Replace kernel files."
+    cd ${current_path}
+
+    # Determine custom kernel filename
+    kernel_boot="$(ls ${kernel_path}/${kd}/${kernel}/boot-${kernel}*.tar.gz 2>/dev/null | head -n 1)"
+    kernel_name="${kernel_boot##*/}" && kernel_name="${kernel_name:5:-7}"
+    [[ -n "${kernel_name}" ]] || error_msg "Missing kernel files for [ ${kernel} ]"
+    kernel_dtb="${kernel_path}/${kd}/${kernel}/dtb-${PLATFORM}-${kernel_name}.tar.gz"
+    kernel_modules="${kernel_path}/${kd}/${kernel}/modules-${kernel_name}.tar.gz"
+    kernel_header="${kernel_path}/${kd}/${kernel}/header-${kernel_name}.tar.gz"
+    [[ -s "${kernel_boot}" && -s "${kernel_dtb}" && -s "${kernel_modules}" && -s "${kernel_header}" ]] || error_msg "The 4 kernel missing."
+
+    # 01. For /boot five files
+    tar -xzf ${kernel_boot} -C ${tag_bootfs}
+    [[ "${PLATFORM}" == "amlogic" ]] && (cd ${tag_bootfs} && cp -f uInitrd-${kernel_name} uInitrd && cp -f vmlinuz-${kernel_name} zImage)
+    [[ "${PLATFORM}" == "rockchip" ]] && (cd ${tag_bootfs} && ln -sf uInitrd-${kernel_name} uInitrd && ln -sf vmlinuz-${kernel_name} Image)
+    [[ "${PLATFORM}" == "allwinner" ]] && (cd ${tag_bootfs} && cp -f uInitrd-${kernel_name} uInitrd && cp -f vmlinuz-${kernel_name} Image)
+    [[ "$(ls ${tag_bootfs}/*${kernel_name} -l 2>/dev/null | grep "^-" | wc -l)" -ge "2" ]] || error_msg "The /boot files is missing."
+    [[ "${PLATFORM}" == "amlogic" ]] && get_textoffset "${tag_bootfs}/zImage"
+
+    # 02. For /boot/dtb/${PLATFORM}/*
+    [[ -d "${tag_bootfs}/dtb/${PLATFORM}" ]] || mkdir -p ${tag_bootfs}/dtb/${PLATFORM}
+    tar -xzf ${kernel_dtb} -C ${tag_bootfs}/dtb/${PLATFORM}
+    [[ "${PLATFORM}" == "rockchip" ]] && ln -sf dtb ${tag_bootfs}/dtb-${kernel_name}
+    [[ "$(ls ${tag_bootfs}/dtb/${PLATFORM} -l 2>/dev/null | grep "^-" | wc -l)" -ge "2" ]] || error_msg "/boot/dtb/${PLATFORM} files is missing."
+
+    # 03. For /usr/src/linux-headers-${kernel_name}
+    header_path="linux-headers-${kernel_name}"
+    rm -rf ${tag_rootfs}/usr/src/linux-headers-* 2>/dev/null && mkdir -p "${tag_rootfs}/usr/src/${header_path}"
+    tar -xzf ${kernel_header} -C ${tag_rootfs}/usr/src/${header_path}
+    [[ -d "${tag_rootfs}/usr/src/${header_path}/include" ]] || error_msg "/usr/src/${header_path}/include folder is missing."
+
+    # 04. For /usr/lib/modules/${kernel_name}
+    tar -xzf ${kernel_modules} -C ${tag_rootfs}/usr/lib/modules
+    (cd ${tag_rootfs}/usr/lib/modules/${kernel_name}/ && rm -f build source 2>/dev/null && ln -sf /usr/src/${header_path} build)
+    [[ "$(ls ${tag_rootfs}/usr/lib/modules/${kernel_name} -l 2>/dev/null | grep "^d" | wc -l)" -eq "1" ]] || error_msg "/usr/lib/modules kernel folder is missing."
+}
+
+refactor_bootfs() {
+    process_msg " (5/7) Refactor bootfs files."
+    cd ${tag_bootfs}
+
+    # Process Amlogic series boot partition files
+    [[ "${PLATFORM}" == "amlogic" && "${need_overload}" == "yes" ]] && {
+        if [[ -n "${UBOOT_OVERLOAD}" && -f "${UBOOT_OVERLOAD}" ]]; then
+            cp -f ${UBOOT_OVERLOAD} u-boot.ext
+            chmod +x u-boot.ext
+        elif [[ -z "${UBOOT_OVERLOAD}" || ! -f "${UBOOT_OVERLOAD}" ]]; then
+            error_msg "${board} Board does not support using ${kernel} kernel, missing u-boot."
+        fi
+    }
+
+    # Set configuration file mount parameters
+    if [[ "${rootfs_type}" == "btrfs" ]]; then
+        # For uEnv.txt
+        uenv_rootdev="UUID=${ROOTFS_UUID} rootflags=compress=zstd:6 rootfstype=btrfs"
+        # For armbianEnv.txt
+        armbianenv_rootdev="UUID=${ROOTFS_UUID}"
+        armbianenv_rootflags="compress=zstd:6"
+    else
+        # For uEnv.txt
+        uenv_rootdev="UUID=${ROOTFS_UUID} rootflags=data=writeback rw rootfstype=ext4"
+        # For armbianEnv.txt
+        armbianenv_rootdev="UUID=${ROOTFS_UUID}"
+        armbianenv_rootflags="rw,errors=remount-ro"
+    fi
+
+    # Edit the uEnv.txt
+    uenv_conf_file="uEnv.txt"
+    [[ -f "${uenv_conf_file}" ]] && {
+        sed -i "s|LABEL=ROOTFS|${uenv_rootdev}|g" ${uenv_conf_file}
+        sed -i "s|meson.*.dtb|${FDTFILE}|g" ${uenv_conf_file}
+        sed -i "s|sun50i.*.dtb|${FDTFILE}|g" ${uenv_conf_file}
+    }
+
+    # Add an alternate file (/boot/extlinux/extlinux.conf)
+    boot_extlinux_file="extlinux/extlinux.conf.bak"
+    rename_extlinux_file="extlinux/extlinux.conf"
+    [[ -f "${boot_extlinux_file}" ]] && {
+        sed -i "s|LABEL=ROOTFS|${uenv_rootdev}|g" ${boot_extlinux_file}
+        sed -i "s|meson.*.dtb|${FDTFILE}|g" ${boot_extlinux_file}
+        sed -i "s|sun50i.*.dtb|${FDTFILE}|g" ${boot_extlinux_file}
+        # If needed, such as t95z(s905x), rename delete .bak
+        [[ "${BOOT_CONF}" == "extlinux.conf" ]] && mv -f ${boot_extlinux_file} ${rename_extlinux_file}
+    }
+
+    # Edit the armbianEnv.txt
+    armbianenv_conf_file="armbianEnv.txt"
+    [[ -f "${armbianenv_conf_file}" ]] && {
+        sed -i "s|^fdtfile=.*|fdtfile=${PLATFORM}/${FDTFILE}|g" ${armbianenv_conf_file}
+        sed -i "s|^rootfstype=.*|rootfstype=${rootfs_type}|g" ${armbianenv_conf_file}
+        sed -i "s|^rootdev=.*|rootdev=${armbianenv_rootdev}|g" ${armbianenv_conf_file}
+        sed -i "s|^rootflags=.*|rootflags=${armbianenv_rootflags}|g" ${armbianenv_conf_file}
+        sed -i "s|^overlay_prefix=.*|overlay_prefix=${FAMILY}|g" ${armbianenv_conf_file}
+    }
+
+    # Check device configuration files
+    [[ -f "${uenv_conf_file}" || -f "${rename_extlinux_file}" || -f "${armbianenv_conf_file}" ]] || error_msg "Missing [ /boot/*Env.txt ]"
+}
+
+refactor_rootfs() {
+    process_msg " (6/7) Refactor rootfs files."
+    cd ${tag_rootfs}
+
+    # Remove the scripts contained in [ armbian-bsp-cli-odroidn2 ] that will cause the system to fail to start
+    # [ dpkg -c armbian-bsp-cli-odroidn2_23.02.2_arm64.deb ] : https://paste.armbian.com/aloxuvokol
+    # Move usr/share/armbian to armbian.bak. [ dpkg -S boot.cmd ] : [ armbian-bsp-cli-odroidn2: /usr/share/armbian/boot.cmd ]
+    [[ -d "usr/share/armbian" ]] && mv -f usr/share/armbian usr/share/armbian.bak
+    # Move usr/lib/nand-sata-install to nand-sata-install.bak. [ Useless bootloader and u-boot ]
+    [[ -d "usr/lib/nand-sata-install" ]] && mv -f usr/lib/nand-sata-install usr/lib/nand-sata-install.bak
+    # Disable update_initramfs
+    initramfs_conf="etc/initramfs-tools/update-initramfs.conf"
+    [[ -f "${initramfs_conf}" ]] && {
+        [[ -n "$(cat ${initramfs_conf} | grep -oE "^update_initramfs=")" ]] || error_msg "Missing [ update_initramfs ]"
+        sed -i "s|^update_initramfs=.*|update_initramfs=no|g" ${initramfs_conf}
+    }
+
+    # Delete related files
+    rm -f etc/apt/sources.list.save
+    rm -f usr/sbin/ddbr
+    rm -f var/lib/dpkg/info/linux-image*
+    rm -rf usr/share/doc/linux-image-*
+    rm -rf usr/lib/linux-image-*
+    # Remove motd-news related services
+    rm -f usr/lib/systemd/system/motd-news.timer
+    rm -f usr/lib/systemd/system/motd-news.service
+    rm -f var/lib/systemd/deb-systemd-helper-enabled/timers.target.wants/motd-news.timer
+    rm -f var/lib/systemd/deb-systemd-helper-enabled/motd-news.timer.dsh-also
+    rm -f etc/systemd/system/timers.target.wants/motd-news.timer
+    rm -f etc/update-motd.d/50-motd-news
+
+    # Rebuild symbolic link files (ln -sf ${target} ${symbolic_link_file})
+    ln -sf /usr/bin bin
+    ln -sf /usr/lib lib
+    ln -sf /usr/sbin sbin
+    ln -sf /run/lock var/lock
+    ln -sf /run var/run
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai etc/localtime
+    ln -sf /usr/sbin/armbian-ddbr usr/sbin/ddbr
+
+    # Fix common releases permissions
+    [[ -d "var/tmp" ]] && chmod 777 var/tmp
+    [[ -d "etc/update-motd.d" ]] && chmod 755 etc/update-motd.d/*
+    [[ -d "var/cache/man" ]] && chown man:root var/cache/man -R
+    [[ -d "var/cache/man" ]] && chmod g+s var/cache/man -R
+    [[ -f "etc/sudoers" ]] && chown root:root etc/sudoers
+    [[ -f "etc/sudoers" ]] && chmod 440 etc/sudoers
+    [[ -f "usr/bin/sudo" ]] && chown root:root usr/bin/sudo
+    [[ -f "usr/bin/sudo" ]] && chmod 4755 usr/bin/sudo
+    # Fix focal permissions
+    [[ -f "usr/lib/sudo/sudoers.so" ]] && chown 0 usr/lib/sudo/sudoers.so
+    [[ -f "usr/lib/sudo/sudoers.so" ]] && chmod 644 usr/lib/sudo/sudoers.so
+    [[ -f "usr/lib/policykit-1/polkit-agent-helper-1" ]] && chmod 4755 usr/lib/policykit-1/polkit-agent-helper-1
+    # Fix jammy permissions
+    [[ -f "usr/libexec/sudo/sudoers.so" ]] && chown 0 usr/libexec/sudo/sudoers.so
+    [[ -f "usr/libexec/sudo/sudoers.so" ]] && chmod 644 usr/libexec/sudo/sudoers.so
+    [[ -f "usr/libexec/polkit-agent-helper-1" ]] && chmod 4755 usr/libexec/polkit-agent-helper-1
+
+    # Edit the etc/fstab
+    [[ -f "etc/fstab" ]] || error_msg "The etc/fstab File does not exist."
+    # Set different types of mount parameters
+    if [[ "${rootfs_type}" == "btrfs" ]]; then
+        fstab_string="defaults,noatime,compress=zstd:6"
+    else
+        fstab_string="defaults,noatime,nodiratime,commit=600,errors=remount-ro"
+    fi
+    # Update mount settings
+    sed -i "s|^LABEL=ROOTFS.*|UUID=${ROOTFS_UUID}  /      ${rootfs_type}  ${fstab_string}  0 1|g" etc/fstab
+    [[ "${bootfs_type}" == "ext4" ]] && {
+        sed -i "s|^LABEL=BOOT.*|UUID=${BOOT_UUID}  /boot  ext4  defaults  0 2|g" etc/fstab
+    }
+
+    # Update release information
+    [[ -f "${armbian_release_file}" ]] && {
+        # Shorten release version number
+        sed -i "s|^VERSION=.*|VERSION=${armbian_rebuild_version}-trunk|g" ${armbian_release_file}
+        # Custom banner name
+        sed -i "s|^BOARD_NAME=.*|BOARD_NAME=\"${board}\"|g" ${armbian_release_file}
+        # Remove [ No end-user support ] prompt in [ /etc/update-motd.d/10-armbian-header ]
+        sed -i "s|^IMAGE_TYPE=.*|IMAGE_TYPE=stable|g" ${armbian_release_file}
+    }
+
+    # Add custom startup script
+    custom_startup_script="etc/custom_service/start_service.sh"
+    [[ -x "${custom_startup_script}" && -f "etc/rc.local" ]] && {
+        sed -i '/^exit 0/i\bash /etc/custom_service/start_service.sh' etc/rc.local
+    }
+
+    # Enable ssh service
+    ssh_config="etc/ssh/sshd_config"
+    [[ -f "${ssh_config}" ]] && {
+        sed -i "s|^#*Port .*|Port 22|g" ${ssh_config}
+        sed -i "s|^#*PermitRootLogin .*|PermitRootLogin yes|g" ${ssh_config}
+    }
+
+    # Adjust the default timeout for service start/stop
+    system_conf="etc/systemd/system.conf"
+    [[ -f "${system_conf}" ]] && {
+        sed -i "s|^#*DefaultTimeoutStartSec.*|DefaultTimeoutStartSec=10s|g" ${system_conf}
+        sed -i "s|^#*DefaultTimeoutStopSec.*|DefaultTimeoutStopSec=10s|g" ${system_conf}
+    }
+
+    # Disable tips of the day for [ /etc/update-motd.d/35-armbian-tips ]
+    motd_tips="etc/default/armbian-motd"
+    [[ -f "${motd_tips}" ]] && sed -i 's|^MOTD_DISABLE=.*|MOTD_DISABLE="tips"|g' ${motd_tips}
+    quotes_cron="etc/cron.weekly/armbian-quotes"
+    [[ -f "${quotes_cron}" ]] && sed -i "s|^curl |#curl |g" ${quotes_cron}
+
+    # Add custom disabled alias extension load modules
+    custom_blacklist="etc/modprobe.d/blacklist.conf"
+    [[ -f "${custom_blacklist}" ]] || echo -e "# This file lists the disabled alias extension load modules." >${custom_blacklist}
+    [[ "${FDTFILE}" == "meson-sm1-skyworth-lb2004-a4091.dtb" ]] && {
+        echo -e "\n# For Tencent Aurora 3Pro (s905x3-b) box." >>${custom_blacklist}
+        echo -e "blacklist btmtksdio" >>${custom_blacklist}
+    }
+
+    # Make the .bashrc take effect, Default shell settings file: /etc/default/useradd
+    echo '[[ "${SHELL}" == *bash && -f "${HOME}/.bashrc" ]] && . ${HOME}/.bashrc' >>etc/profile
+
+    # Renaming/disabling related files
+    mv -f etc/udev/rules.d/hdmi.rules etc/udev/rules.d/hdmi.rules.bak 2>/dev/null
+
+    # Explicitly disable resizing for Amlogic device [ /usr/lib/armbian/armbian-resize-filesystem ], use armbian-tf settings
+    echo "yes" >root/.no_rootfs_resize
+
+    # Reduce network latency [ A start job is running for raise network interfaces (5 mins 1 sec) ]
+    network_service="usr/lib/systemd/system/networking.service"
+    [[ -f "${network_service}" ]] && sed -i "s|^#*TimeoutStartSec=.*|TimeoutStartSec=10sec|g" ${network_service}
+
+    # Add tasks that need to be executed on initial startup
+    armbian_firstrun="usr/lib/armbian/armbian-firstrun"
+    [[ -f "${armbian_firstrun}" ]] && sed -i '/\/etc\/armbian-release/i\[[ -x "/usr/sbin/armbian-fix" ]] && . /usr/sbin/armbian-fix' ${armbian_firstrun}
+
+    # Fix abnormal CPU temperature
+    temp_file="usr/lib/armbian/armbian-allwinner-battery"
+    [[ -f "${temp_file}" ]] && {
+        insert_line="$(cat ${temp_file} | grep -n 'CPU_TEMP_OFFSET' | awk -F':' '{print $1}')"
+        [[ -n "${insert_line}" ]] && {
+            sed -i "${insert_line}i\        [[ \"\$(echo \${board_temp} | awk -F'.' '{print \$1}' | wc -c)\" -gt \"3\" ]] && board_temp=\${board_temp:0:2}" ${temp_file}
+        }
+    }
+
+    # Get random macaddr
+    mac_hexchars="0123456789ABCDEF"
+    mac_end=$(for i in {1..6}; do echo -n ${mac_hexchars:$((${RANDOM} % 16)):1}; done | sed -e 's/\(..\)/:\1/g')
+    random_macaddr="9E:61${mac_end}"
+
+    # Optimize wifi/bluetooth module
+    [[ -d "usr/lib/firmware/brcm" ]] && (
+        cd usr/lib/firmware/brcm/ && mv -f ../*.hcd . 2>/dev/null
+
+        # gtking/gtking pro is bcm4356 wifi/bluetooth, wifi5 module AP6356S
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:00/" "brcmfmac4356-sdio.txt" >"brcmfmac4356-sdio.azw,gtking.txt"
+        # gtking/gtking pro is bcm4356 wifi/bluetooth, wifi6 module AP6275S
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:01/" "brcmfmac4375-sdio.txt" >"brcmfmac4375-sdio.azw,gtking.txt"
+        # Phicomm N1 is bcm43455 wifi/bluetooth
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:02/" "brcmfmac43455-sdio.txt" >"brcmfmac43455-sdio.phicomm,n1.txt"
+        # MXQ Pro+ is AP6330(bcm4330) wifi/bluetooth
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:03/" "brcmfmac4330-sdio.txt" >"brcmfmac4330-sdio.crocon,mxq-pro-plus.txt"
+        # HK1 Box & H96 Max X3 is bcm54339 wifi/bluetooth
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:04/" "brcmfmac4339-sdio.ZP.txt" >"brcmfmac4339-sdio.amlogic,sm1.txt"
+        # old ugoos x3 is bcm43455 wifi/bluetooth
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:05/" "brcmfmac43455-sdio.txt" >"brcmfmac43455-sdio.amlogic,sm1.txt"
+        # new ugoos x3 is brm43456
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:06/" "brcmfmac43456-sdio.txt" >"brcmfmac43456-sdio.amlogic,sm1.txt"
+        # x96max plus v5.1 (ip1001m phy) adopts am7256 (brcm4354)
+        sed -e "s/macaddr=.*/macaddr=${random_macaddr}:07/" "brcmfmac4354-sdio.txt" >"brcmfmac4354-sdio.amlogic,sm1.txt"
+    )
+
+    # Add custom Armbian information
+    echo "PLATFORM='${PLATFORM}'" >>${ophub_release_file}
+    echo "VERSION_CODEID='${release_codeid}'" >>${ophub_release_file}
+    echo "VERSION_CODENAME='${release_codename}'" >>${ophub_release_file}
+    echo "FAMILY='${FAMILY}'" >>${ophub_release_file}
+    echo "BOARD='${board}'" >>${ophub_release_file}
+    echo "SOC='${SOC}'" >>${ophub_release_file}
+    echo "FDTFILE='${FDTFILE}'" >>${ophub_release_file}
+    echo "KERNEL_REPO='${kernel_repo}'" >>${ophub_release_file}
+    echo "KERNEL_TAGS='${KERNEL_TAGS}'" >>${ophub_release_file}
+    echo "KERNEL_VERSION='${kernel}'" >>${ophub_release_file}
+    echo "KERNEL_BACKUP='yes'" >>${ophub_release_file}
+    echo "GITHUB_CDN=''" >>${ophub_release_file}
+    echo "BOOT_CONF='${BOOT_CONF}'" >>${ophub_release_file}
+    echo "ROOTFS_TYPE='${rootfs_type}'" >>${ophub_release_file}
+    echo "DISK_TYPE='usb'" >>${ophub_release_file}
+    echo "AMPART_STATUS='no'" >>${ophub_release_file}
+    echo "MLUBOOT_STATUS='no'" >>${ophub_release_file}
+    echo "MAINLINE_UBOOT='/usr/lib/u-boot/${MAINLINE_UBOOT}'" >>${ophub_release_file}
+    echo "BOOTLOADER_IMG='/usr/lib/u-boot/${BOOTLOADER_IMG}'" >>${ophub_release_file}
+    if [[ "${PLATFORM}" == "amlogic" ]]; then
+        echo "UBOOT_OVERLOAD='${UBOOT_OVERLOAD}'" >>${ophub_release_file}
+    elif [[ "${PLATFORM}" == "rockchip" ]]; then
+        echo "TRUST_IMG='${TRUST_IMG}'" >>${ophub_release_file}
+    fi
+    echo "PACKAGED_DATE='$(date +%Y-%m-%d)'" >>${ophub_release_file}
+
+    sync && sleep 3
+}
+
+clean_tmp() {
+    process_msg " (7/7) Clear temporary files."
+    cd ${current_path}
+
+    umount -f ${tmp_armbian} 2>/dev/null
+    losetup -d ${loop_old} 2>/dev/null
+
+    fstrim ${tag_bootfs} 2>/dev/null
+    fstrim ${tag_rootfs} 2>/dev/null
+    umount -f ${tag_bootfs} 2>/dev/null
+    umount -f ${tag_rootfs} 2>/dev/null
+    losetup -d ${loop_new} 2>/dev/null
+
+    cd ${tmp_outpath}
+
+    pigz -f *.img && mv -f *.img.gz ${armbian_outputpath} && sync
+
+    cd ${current_path}
+
+    rm -rf ${tmp_dir} && sync
+}
+
+loop_rebuild() {
+    cd ${current_path}
+    echo -e "${STEPS} Start building Armbian..."
+
+    j="1"
+    for b in ${build_armbian[*]}; do
+        {
+            # Set specific configuration for building Armbian system
+            board="${b}"
+            confirm_version
+
+            # Determine kernel tags
+            kd="${KERNEL_TAGS}"
+            if [[ "${KERNEL_TAGS}" == "rk3588" ]]; then
+                kernel_list=(${rk3588_kernel[*]})
+            elif [[ "${KERNEL_TAGS}" == "h6" ]]; then
+                kernel_list=(${h6_kernel[*]})
+            elif [[ "${KERNEL_TAGS}" =~ ^[0-9]{1,2}\.[0-9]+ ]]; then
+                kernel_list=(${specify_kernel[*]})
+                kd="stable"
+            else
+                kernel_list=(${stable_kernel[*]})
+            fi
+
+            i="1"
+            for k in ${kernel_list[*]}; do
+                {
+                    kernel="${k}"
+
+                    # Skip inapplicable kernels
+                    if [[ "${KERNEL_TAGS}" =~ ^[0-9]{1,2}\.[0-9]+ ]]; then
+                        [[ "${kernel}" != "$(echo ${KERNEL_TAGS} | awk -F'.' '{print $1"."$2"."}')"* ]] && {
+                            echo -e "(${j}.${i}) ${TIPS} The [ ${board} ] device cannot use [ ${kd}/${kernel} ] kernel, skip."
+                            let i++
+                            continue
+                        }
+                    fi
+
+                    # Check disk space size
+                    echo -ne "(${j}.${i}) Start building Armbian [ ${board} - ${kd}/${kernel} ]. "
+                    now_remaining_space="$(df -Tk ${current_path} | grep '/dev/' | awk '{print $5}' | echo $(($(xargs) / 1024 / 1024)))"
+                    if [[ "${now_remaining_space}" -le "6" ]]; then
+                        echo -e "${WARNING} Remaining space is less than 6G, exit this build."
+                        break
+                    else
+                        echo "Remaining space is ${now_remaining_space}G."
+                    fi
+
+                    # Execute the following functions in sequence
+                    extract_armbian
+                    make_image
+                    copy_files
+                    replace_kernel
+                    refactor_bootfs
+                    refactor_rootfs
+                    clean_tmp
+
+                    echo -e "(${j}.${i}) Armbian build successfully. \n"
+                    let i++
+                }
+            done
+
+            let j++
+        }
+    done
+
+    cd ${armbian_outputpath}
+
+    # Generate sha256sum check file
+    sha256sum * >sha256sums && sync
+}
+
+# Show welcome message
+echo -e "${STEPS} Welcome to Rebuild Armbian!"
+echo -e "${INFO} Server running on Ubuntu: [ Release: ${host_release} / Host: ${arch_info} ] \n"
+# Check script permission
+[[ "$(id -u)" == "0" ]] || error_msg "Please run this script as root: [ sudo ./${0} ]"
+
+# Initialize variables
+init_var "${@}"
+# Find rebuild files
+find_armbian
+# Download the dependency files
+download_depends
+# Query the latest kernel version
+[[ "${auto_kernel}" == "true" ]] && query_version
+# Download the kernel files
+download_kernel
+
+# Show rebuild settings
+echo -e "${INFO} [ ${#build_armbian[*]} ] lists of Armbian board: [ $(echo ${build_armbian[*]} | xargs) ]"
+echo -e "${INFO} ROOTFS type: [ ${rootfs_type} ] \n"
+# Show server start information
+echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${current_path}) \n"
+
+# Loop to rebuild armbian
+loop_rebuild
+
+# Show server end information
+echo -e "${STEPS} Server space usage after compilation: \n$(df -hT ${current_path}) \n"
+echo -e "${SUCCESS} All process completed successfully."
+# All process completed
+wait
