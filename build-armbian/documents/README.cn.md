@@ -99,7 +99,7 @@ Personal center: Settings > Developer settings > Personal access tokens > Genera
 
 ## 3. Fork 仓库并设置 GH_TOKEN
 
-现在可以 Fork 仓库了，打开仓库 https://github.com/ophub/amlogic-s9xxx-armbian ，点击右上的 Fork 按钮，复制一份仓库代码到自己的账户下，稍等几秒钟，提示 Fork 完成后，到自己的账户下访问自己仓库里的 amlogic-s9xxx-armbian 。在右上角的 `Settings` > `Secrets` > `Actions` > `New repostiory secret` ( Name: `GH_TOKEN`, Value: `填写刚才GITHUB_TOKEN的值` )，保存。并在左侧导航栏的 `Actions` > `General` > `Workflow permissions` 下选择 `Read and write permissions` 并保存。图示如下：
+现在可以 Fork 仓库了，打开仓库 https://github.com/jerbe/armbian_amlogic-s9xxx ，点击右上的 Fork 按钮，复制一份仓库代码到自己的账户下，稍等几秒钟，提示 Fork 完成后，到自己的账户下访问自己仓库里的 amlogic-s9xxx-armbian 。在右上角的 `Settings` > `Secrets` > `Actions` > `New repostiory secret` ( Name: `GH_TOKEN`, Value: `填写刚才GITHUB_TOKEN的值` )，保存。并在左侧导航栏的 `Actions` > `General` > `Workflow permissions` 下选择 `Read and write permissions` 并保存。图示如下：
 
 <div style="width:100%;margin-top:40px;margin:5px;">
 <img src=https://user-images.githubusercontent.com/68696949/109418568-0eb2f880-7a04-11eb-81c9-194e32382998.jpg width="300" />
@@ -188,7 +188,7 @@ schedule:
 
 ## 8. 安装 Armbian 到 EMMC
 
-Amlogic, Rockchip 和 Allwinner 的安装方法不同。不同的设备具有不同的存储，有的设备使用外置 microSD 卡，有的带有 eMMC，有的支持使用 NVMe 等多种存储介质，根据设备不同，分别介绍其安装方法。首先在 [Releases](https://github.com/ophub/amlogic-s9xxx-armbian/releases) 里下载自己设备的 Armbian 系统，解压缩成 .img 格式备用。根据自己的设备，使用下面小结中不同的安装方法。
+Amlogic, Rockchip 和 Allwinner 的安装方法不同。不同的设备具有不同的存储，有的设备使用外置 microSD 卡，有的带有 eMMC，有的支持使用 NVMe 等多种存储介质，根据设备不同，分别介绍其安装方法。首先在 [Releases](https://github.com/jerbe/armbian_amlogic-s9xxx/releases) 里下载自己设备的 Armbian 系统，解压缩成 .img 格式备用。根据自己的设备，使用下面小结中不同的安装方法。
 
 当安装完成后，将 Armbian 设备接入`路由器`，设备开机`2分钟`后，到路由器里查看设备名称为 Armbian 的 `IP`，使用 `SSH` 工具连接进行管理设置。默认用户名为 `root`，默认密码为 `1234`，默认端口为 `22`
 
@@ -220,7 +220,7 @@ armbian-install
 
 #### 8.2.1 Radxa-Rock5B 的安装方法
 
-Radxa-Rock5B 有 microSD/eMMC/NVMe 等多种存储介质可以选择，相应的安装方法也不同。下载 [rk3588_spl_loader_v1.08.111.bin 和 spi_image.img](../u-boot/rockchip/rock5b) 文件备用。下载 [RKDevTool](https://github.com/ophub/kernel/releases/download/tools/Radxa_rock5b_RKDevTool_Release_v2.96__DriverAssitant_v5.1.1.tar.gz) 工具及驱动备用。下载 [Rufus](https://rufus.ie/) 或者 [balenaEtcher](https://www.balena.io/etcher/) 写盘工具备用。
+Radxa-Rock5B 有 microSD/eMMC/NVMe 等多种存储介质可以选择，相应的安装方法也不同。下载 [rk3588_spl_loader_v1.08.111.bin 和 spi_image.img](../u-boot/rockchip/rock5b) 文件备用。下载 [RKDevTool](https://github.com/jerbe/armbian_kernel/releases/download/tools/Radxa_rock5b_RKDevTool_Release_v2.96__DriverAssitant_v5.1.1.tar.gz) 工具及驱动备用。下载 [Rufus](https://rufus.ie/) 或者 [balenaEtcher](https://www.balena.io/etcher/) 写盘工具备用。
 
 ##### 8.2.1.1 安装系统至 microSD
 
@@ -269,7 +269,7 @@ dd if=armbian.img  of=/dev/nvme0n1  bs=1M status=progress
 
 #### 8.2.3 电犀牛 R68S 的安装方法
 
-- 下载 [RKDevTool](https://github.com/ophub/kernel/releases/download/tools/FastRhino_r68s_RKDevTool_Release_v2.86___DriverAssitant_v5.1.1.tar.gz) 工具及驱动，解压并安装 DriverAssitant 驱动程序，打开 RKDevTool 工具备用。
+- 下载 [RKDevTool](https://github.com/jerbe/armbian_kernel/releases/download/tools/FastRhino_r68s_RKDevTool_Release_v2.86___DriverAssitant_v5.1.1.tar.gz) 工具及驱动，解压并安装 DriverAssitant 驱动程序，打开 RKDevTool 工具备用。
 - R68s 在关机状态下，先插入 USB 双公头线，然后按住 Recovery 键并插上 12V 电源，两秒之后松开 Recovery 键，刷机工具会`发现一个 LOADER 设备`。
 - 在 RKDevTool 工具操作界面的空白处点右键，添加项。
 - 地址是 `0x00000000`，名字是 `armbian`，路径点击右侧选择 `armbian.img` 系统文件。
@@ -332,8 +332,8 @@ armbian-update
 
 | 可选参数  | 默认值        | 选项           | 说明               |
 | -------- | ------------ | ------------- | ----------------- |
-| -k       | 最新版        | 内核版本       | 设置[内核版本](https://github.com/ophub/kernel/releases/tag/kernel_stable)  |
-| -t       | 自动化        | stable/rk3588/h6/flippy/dev | 设置[内核 tags](https://github.com/ophub/kernel)     |
+| -k       | 最新版        | 内核版本       | 设置[内核版本](https://github.com/jerbe/armbian_kernel/releases/tag/kernel_stable)  |
+| -t       | 自动化        | stable/rk3588/h6/flippy/dev | 设置[内核 tags](https://github.com/jerbe/armbian_kernel)     |
 | -m       | no           | yes/no        | 使用主线 u-boot     |
 | -b       | yes          | yes/no        | 更新内核时自动备份当前系统使用的内核    |
 | -r       | ophub/kernel | `<owner>/<repo>` | 设置从 github.com 下载内核的仓库  |
@@ -374,7 +374,7 @@ armbian-update
 armbian-software
 ```
 
-使用 `armbian-software -u` 命令可以更新本地的软件中心列表。根据用户在 [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues) 中的需求反馈，逐步整合常用[软件](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf)，实现一键安装/更新/卸载等快捷操作。包括 `docker 镜像`、`桌面软件`、`应用服务` 等。详见更多[说明](armbian_software.md)。
+使用 `armbian-software -u` 命令可以更新本地的软件中心列表。根据用户在 [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues) 中的需求反馈，逐步整合常用[软件](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf)，实现一键安装/更新/卸载等快捷操作。包括 `docker 镜像`、`桌面软件`、`应用服务` 等。详见更多[说明](armbian_software.md)。
 
 ## 12. 常见问题
 
@@ -404,9 +404,9 @@ armbian-software
 
 - 一般情况下，重新插入电源，如果可以从 USB 中启动，只要重新安装即可，多试几次。
 
-- 如果接入显示器后，屏幕是黑屏状态，无法从 USB 启动，就需要进行盒子的短接初始化了。先将盒子恢复到原来的安卓系统，再重新刷入 Armbian 系统。首先下载 [amlogic_usb_burning_tool](https://github.com/ophub/kernel/releases/tag/tools) 系统恢复工具并安装好。准备一条 [USB 双公头数据线](https://user-images.githubusercontent.com/68696949/159267576-74ad69a5-b6fc-489d-b1a6-0f8f8ff28634.png)，准备一个 [曲别针](https://user-images.githubusercontent.com/68696949/159267790-38cf4681-6827-4cb6-86b2-19c7f1943342.png)。
+- 如果接入显示器后，屏幕是黑屏状态，无法从 USB 启动，就需要进行盒子的短接初始化了。先将盒子恢复到原来的安卓系统，再重新刷入 Armbian 系统。首先下载 [amlogic_usb_burning_tool](https://github.com/jerbe/armbian_kernel/releases/tag/tools) 系统恢复工具并安装好。准备一条 [USB 双公头数据线](https://user-images.githubusercontent.com/68696949/159267576-74ad69a5-b6fc-489d-b1a6-0f8f8ff28634.png)，准备一个 [曲别针](https://user-images.githubusercontent.com/68696949/159267790-38cf4681-6827-4cb6-86b2-19c7f1943342.png)。
 
-- 以 x96max+ 为例，在盒子的主板上确认 [短接点](https://user-images.githubusercontent.com/68696949/110590933-67785300-81b3-11eb-9860-986ef35dca7d.jpg) 的位置，下载盒子的 [Android TV 系统包](https://github.com/ophub/kernel/releases/tag/tools)。其他常见设备的安卓 TV 系统系统及对应的短接点示意图也可以在此[下载查看](https://github.com/ophub/kernel/releases/tag/tools)。
+- 以 x96max+ 为例，在盒子的主板上确认 [短接点](https://user-images.githubusercontent.com/68696949/110590933-67785300-81b3-11eb-9860-986ef35dca7d.jpg) 的位置，下载盒子的 [Android TV 系统包](https://github.com/jerbe/armbian_kernel/releases/tag/tools)。其他常见设备的安卓 TV 系统系统及对应的短接点示意图也可以在此[下载查看](https://github.com/jerbe/armbian_kernel/releases/tag/tools)。
 
 ```
 操作方法：
@@ -432,7 +432,7 @@ armbian-software
 - 把刷好系统的 USB/TF/SD 插入盒子。
 - 开启开发者模式: 设置 → 关于本机 → 版本号 (如: X96max plus...), 在版本号上快速连击 5 次鼠标左键, 看到系统显示 `开启开发者模式` 的提示。
 - 开启 USB 调试模式: 系统 → 高级选选 → 开发者选项 (设置 `开启USB调试` 为启用)。启用 `ADB` 调试。
-- 安装 ADB 工具：下载 [adb](https://github.com/ophub/kernel/releases/tag/tools) 并解压，将 `adb.exe`，`AdbWinApi.dll`，`AdbWinUsbApi.dll` 三个文件拷⻉到 `c://windows/` 目录下的 `system32` 和 `syswow64` 两个文件夹内，然后打开 `cmd` 命令面板，使用 `adb --version` 命令，如果有显示就表示可以使用了。
+- 安装 ADB 工具：下载 [adb](https://github.com/jerbe/armbian_kernel/releases/tag/tools) 并解压，将 `adb.exe`，`AdbWinApi.dll`，`AdbWinUsbApi.dll` 三个文件拷⻉到 `c://windows/` 目录下的 `system32` 和 `syswow64` 两个文件夹内，然后打开 `cmd` 命令面板，使用 `adb --version` 命令，如果有显示就表示可以使用了。
 - 进入 `cmd` 命令模式。输入 `adb connect 192.168.1.137` 命令（其中的 ip 根据你的盒子修改，可以到盒子所接入的路由器设备里查看），如果链接成功会显示 `connected to 192.168.1.137:5555`
 - 输入 `adb shell reboot update` 命令，盒子将重启并从你插入的 USB/TF/SD 启动，从浏览器访问系统的 IP 地址，或者 SSH 访问即可进入系统。
 
@@ -816,7 +816,7 @@ u-boot 文件是引导系统正常启动的重要文件。
 
 #### 12.11.1 提取 bootloader 和 dtb 文件
 
-提取需要使用 HxD 软件。可以从 [官网下载链接](https://mh-nexus.de/en/downloads.php?product=HxD20) 或 [备份下载链接](https://github.com/ophub/kernel/releases/download/tools/HxDSetup.2.5.0.0.zip) 获取安装。
+提取需要使用 HxD 软件。可以从 [官网下载链接](https://mh-nexus.de/en/downloads.php?product=HxD20) 或 [备份下载链接](https://github.com/jerbe/armbian_kernel/releases/download/tools/HxDSetup.2.5.0.0.zip) 获取安装。
 
 在 `cmd` 面板中依次执行以下命令提取相关文件，并下载到本地电脑。
 
@@ -978,7 +978,7 @@ dtc -I dts -O dtb -o xxx.dtb xxx.dts
 
 ### 12.16 如何解决写入 eMMC 时 I/O 错误的问题
 
-有些设备可以从 USB/SD/TF 正常启动 Armbian 使用，但是写入 eMMC 时会报 I/O 写入错误，例如 [Issues](https://github.com/ophub/amlogic-s9xxx-armbian/issues/989) 中的案例，报错内容如下：
+有些设备可以从 USB/SD/TF 正常启动 Armbian 使用，但是写入 eMMC 时会报 I/O 写入错误，例如 [Issues](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/989) 中的案例，报错内容如下：
 
 ```shell
 [  284.338449] I/O error, dev mmcblk2, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 1 prio class 2
@@ -1026,9 +1026,9 @@ max-frequency = <208000000>;
 };
 ```
 
-一般情况下，把 `&sd_emmc_c` 的频率由 `max-frequency = <200000000>;` 下调为 `max-frequency = <100000000>;` 即可解决问题。如果不行可继续下调到 `50000000` 进行测试，并通过调整 `&sd_emmc_b` 来对 `USB/SD/TF` 进行设置，也可以使用 `sd-uhs-sdr` 进行限速。你可以通过修改 dts 文件并 [编译](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/compile-kernel) 得到测试文件，也可以通过 `12.13 节` 中介绍的方法对已有的 dtb 文件进行反编译修改生成测试文件。反编译 dtb 文件修改时使用十六进制的值，其中十进制的 `200000000` 对应的十六进制为 `0xbebc200`，十进制的 `100000000` 对应的十六进制为 `0x5f5e100`，十进制的 `50000000` 对应的十六进制为 `0x2faf080`，十进制的 `25000000` 对应的十六进制为 `0x17d7840`。
+一般情况下，把 `&sd_emmc_c` 的频率由 `max-frequency = <200000000>;` 下调为 `max-frequency = <100000000>;` 即可解决问题。如果不行可继续下调到 `50000000` 进行测试，并通过调整 `&sd_emmc_b` 来对 `USB/SD/TF` 进行设置，也可以使用 `sd-uhs-sdr` 进行限速。你可以通过修改 dts 文件并 [编译](https://github.com/jerbe/armbian_amlogic-s9xxx/tree/main/compile-kernel) 得到测试文件，也可以通过 `12.13 节` 中介绍的方法对已有的 dtb 文件进行反编译修改生成测试文件。反编译 dtb 文件修改时使用十六进制的值，其中十进制的 `200000000` 对应的十六进制为 `0xbebc200`，十进制的 `100000000` 对应的十六进制为 `0x5f5e100`，十进制的 `50000000` 对应的十六进制为 `0x2faf080`，十进制的 `25000000` 对应的十六进制为 `0x17d7840`。
 
-除了通过系统软件层来解决，还可以发挥 [钞能力](https://github.com/ophub/amlogic-s9xxx-armbian/issues/998) 和 [动手能力](https://www.right.com.cn/forum/thread-901586-1-1.html) 解决。
+除了通过系统软件层来解决，还可以发挥 [钞能力](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/998) 和 [动手能力](https://www.right.com.cn/forum/thread-901586-1-1.html) 解决。
 
 ### 12.17 如何解决 Bullseye 版本没有声音的问题
 
@@ -1039,10 +1039,10 @@ Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: dpcm_fe_dai_prepare
 Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: no backend DAIs enabled for fe.dai-link-0
 ```
 
-请参考 [Bullseye NO Sound](https://github.com/ophub/amlogic-s9xxx-armbian/issues/1000) 中的方法进行设置。
+请参考 [Bullseye NO Sound](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/1000) 中的方法进行设置。
 
 ```shell
-wget https://github.com/ophub/kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz
+wget https://github.com/jerbe/armbian_kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz
 tar -xzf bullseye_g12_sound-khadas-utils-4-2-any.tar.gz -C /
 
 systemctl enable sound.service

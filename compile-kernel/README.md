@@ -2,7 +2,7 @@
 
 View Chinese description  |  [查看中文说明](README.cn.md)
 
-This kernel can be used in `Armbian` and `OpenWrt` systems. For example [amlogic-s9xxx-armbian](https://github.com/ophub/amlogic-s9xxx-armbian), [amlogic-s9xxx-openwrt](https://github.com/ophub/amlogic-s9xxx-openwrt), [flippy-openwrt-actions](https://github.com/ophub/flippy-openwrt-actions) and [unifreq/openwrt_packit](https://github.com/unifreq/openwrt_packit). It can be integrated when compiling firmware, or it can be installed into an existing system for use.
+This kernel can be used in `Armbian` and `OpenWrt` systems. For example [amlogic-s9xxx-armbian](https://github.com/jerbe/armbian_amlogic-s9xxx), [amlogic-s9xxx-openwrt](https://github.com/jerbe/openwrt_amlogic-s9xxx), [flippy-openwrt-actions](https://github.com/ophub/flippy-openwrt-actions) and [unifreq/openwrt_packit](https://github.com/unifreq/openwrt_packit). It can be integrated when compiling firmware, or it can be installed into an existing system for use.
 
 You can adjust the configuration of the kernel as needed, such as adding drivers and patches. It is also possible to compile personalized signature kernels with special meanings according to mood, such as `5.10.95-happy-new-year`, `5.10.96-beijing-winter-olympics`, `5.10.99-valentines-day` and so on.
 
@@ -14,7 +14,7 @@ There are compiled kernels in [Releases](https://github.com/ophub/kernel/release
 
 - ### Run under Ubuntu system
 
-1. Clone the repository to local: `git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-armbian.git`
+1. Clone the repository to local: `git clone --depth 1 https://github.com/jerbe/armbian_amlogic-s9xxx.git`
 
 2. Install the necessary packages (The script has only been tested on x86_64 Ubuntu-20.04/22.04)
 
@@ -57,13 +57,13 @@ sudo apt-get install -y $(cat compile-kernel/tools/script/ubuntu2204-build-armbi
 
 This way you compile the kernel using your modified repository.
 
-1. Select ***`Compile the kernel`*** on the [Action](https://github.com/ophub/amlogic-s9xxx-armbian/actions) page. Click the ***`Run workflow`*** button.
+1. Select ***`Compile the kernel`*** on the [Action](https://github.com/jerbe/armbian_amlogic-s9xxx/actions) page. Click the ***`Run workflow`*** button.
 
 2. Using Templates [compile-kernel.yml](../.github/workflows/compile-kernel.yml). The code is as follows:
 
 ```yaml
 - name: Compile the kernel
-  uses: ophub/amlogic-s9xxx-armbian@main
+  uses: jerbe/armbian_amlogic-s9xxx@main
   with:
     build_target: kernel
     kernel_version: 5.15.1_6.1.1
@@ -126,9 +126,9 @@ The following describes the integration when compiling the OpenWrt firmware and 
 
 - #### Compile OpenWrt firmware with kernel
 
-Compiling OpenWrt firmware supports localized operations, as well as online compilation using Actions from github.com. For details on how to use localized compilation, see: [Local build instructions](https://github.com/ophub/amlogic-s9xxx-openwrt#local-build-instructions), For details on how to compile online with Actions: [Use GitHub Actions to build](https://github.com/ophub/amlogic-s9xxx-openwrt#use-github-actions-to-build)
+Compiling OpenWrt firmware supports localized operations, as well as online compilation using Actions from github.com. For details on how to use localized compilation, see: [Local build instructions](https://github.com/jerbe/openwrt_amlogic-s9xxx#local-build-instructions), For details on how to compile online with Actions: [Use GitHub Actions to build](https://github.com/jerbe/openwrt_amlogic-s9xxx#use-github-actions-to-build)
 
 - #### Install the kernel to an existing OpenWrt system
 
-You can use the [luci-app-amlogic](https://github.com/ophub/luci-app-amlogic/blob/main/README.cn.md) plugin to install the compiled kernel into the existing OpenWrt system, For specific operation methods, please refer to: [Update OpenWrt](https://github.com/ophub/amlogic-s9xxx-openwrt#update-openwrt)
+You can use the [luci-app-amlogic](https://github.com/ophub/luci-app-amlogic/blob/main/README.cn.md) plugin to install the compiled kernel into the existing OpenWrt system, For specific operation methods, please refer to: [Update OpenWrt](https://github.com/jerbe/openwrt_amlogic-s9xxx#update-openwrt)
 

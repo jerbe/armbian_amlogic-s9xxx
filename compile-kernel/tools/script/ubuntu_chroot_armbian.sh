@@ -6,7 +6,7 @@
 # warranty of any kind, whether express or implied.
 #
 # This file is a part of the Rebuild Armbian
-# https://github.com/ophub/amlogic-s9xxx-armbian
+# https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Description: Run on Armbian, generate uInitrd.
 # Copyright (C) 2021- https://github.com/unifreq

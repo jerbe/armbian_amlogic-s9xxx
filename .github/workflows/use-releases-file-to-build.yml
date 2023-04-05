@@ -86,7 +86,7 @@ on:
       kernel_repo:
         description: "Set the kernel repository."
         required: false
-        default: "https://github.com/ophub/kernel/tree/main/pub"
+        default: "https://github.com/jerbe/armbian_kernel/tree/main/pub"
       armbian_size:
         description: "Set armbian rootfs size(Unit: MiB)."
         required: false
@@ -158,7 +158,7 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Rebuild Armbian [ ${{ env.ARMBIAN_RELEASE }} ]
-        uses: ophub/amlogic-s9xxx-armbian@main
+        uses: jerbe/armbian_amlogic-s9xxx@main
         if: ${{ steps.down.outputs.status }} == 'success' && !cancelled()
         with:
           build_target: armbian

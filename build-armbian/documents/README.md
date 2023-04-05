@@ -87,7 +87,7 @@ Set the GitHub privacy variable `GitHub_TOKEN`. After the system is compiled, we
 
 ## 3. Fork repository and set GH_TOKEN
 
-Now you can `Fork` the `repository`, open the repository [https://github.com/ophub/amlogic-s9xxx-armbian](https://github.com/ophub/amlogic-s9xxx-armbian), click the `Fork` button on the `upper right`, Will copy a copy of the repository code to your account, `wait a few seconds`, and prompt the Fork to complete Later, go to your account to access `amlogic-s9xxx-armbian` in `your repository`. In the upper right corner of `Settings` > `Secrets` > `Actions` > `New repostiory secret` (Name: `GH_TOKEN`, Value: `Fill in the value of GitHub_TOKEN` just now), `save it`. And select `Read and write permissions` under `Actions` > `General` > `Workflow permissions` in the left nav and save. The icons are as follows:
+Now you can `Fork` the `repository`, open the repository [https://github.com/jerbe/armbian_amlogic-s9xxx](https://github.com/jerbe/armbian_amlogic-s9xxx), click the `Fork` button on the `upper right`, Will copy a copy of the repository code to your account, `wait a few seconds`, and prompt the Fork to complete Later, go to your account to access `amlogic-s9xxx-armbian` in `your repository`. In the upper right corner of `Settings` > `Secrets` > `Actions` > `New repostiory secret` (Name: `GH_TOKEN`, Value: `Fill in the value of GitHub_TOKEN` just now), `save it`. And select `Read and write permissions` under `Actions` > `General` > `Workflow permissions` in the left nav and save. The icons are as follows:
 
 <div style="width:100%;margin-top:40px;margin:5px;">
 <img src=https://user-images.githubusercontent.com/68696949/109418568-0eb2f880-7a04-11eb-81c9-194e32382998.jpg width="300" />
@@ -208,7 +208,7 @@ The installation method of each device is different, which are introduced as fol
 
 #### 8.2.1 Installation method of Radxa-Rock5B
 
-Radxa-Rock5B has a variety of storage media to choose from, including microSD/eMMC/NVMe, and the corresponding installation methods are different. Download [rk3588_spl_loader_v1.08.111.bin and spi_image.img files](../u-boot/rockchip/rock5b) for backup. Download [RKDevTool](https://github.com/ophub/kernel/releases/download/tools/Radxa_rock5b_RKDevTool_Release_v2.96__DriverAssitant_v5.1.1.tar.gz) tool and drive backup. Download [Rufus](https://rufus.ie/) Or [balenaEtcher](https://www.balena.io/etcher/) disk writing tools for backup.
+Radxa-Rock5B has a variety of storage media to choose from, including microSD/eMMC/NVMe, and the corresponding installation methods are different. Download [rk3588_spl_loader_v1.08.111.bin and spi_image.img files](../u-boot/rockchip/rock5b) for backup. Download [RKDevTool](https://github.com/jerbe/armbian_kernel/releases/download/tools/Radxa_rock5b_RKDevTool_Release_v2.96__DriverAssitant_v5.1.1.tar.gz) tool and drive backup. Download [Rufus](https://rufus.ie/) Or [balenaEtcher](https://www.balena.io/etcher/) disk writing tools for backup.
 
 ##### 8.2.1.1 Installing the system to microSD
 
@@ -257,7 +257,7 @@ Use tools such as Rufus or balenaEtcher to write the Armbian system image into t
 
 #### 8.2.3 Installation method of FastRhino-R68S
 
-- Download the [RKDevTool](https://github.com/ophub/kernel/releases/download/tools/FastRhino_r68s_RKDevTool_Release_v2.86___DriverAssitant_v5.1.1.tar.gz) tool and driver, decompress and install the DriverAssistant driver, and open the RKDevTool tool for standby.
+- Download the [RKDevTool](https://github.com/jerbe/armbian_kernel/releases/download/tools/FastRhino_r68s_RKDevTool_Release_v2.86___DriverAssitant_v5.1.1.tar.gz) tool and driver, decompress and install the DriverAssistant driver, and open the RKDevTool tool for standby.
 - When the R68s is powered off, first insert the USB dual male cable, then press and hold the Recovery key and plug in the 12V power supply. After two seconds, release the Recovery key, and the brushing tool will `find a LOADER device`.
 - Right click the blank space of the RKDevTool tool operation interface to add an item.
 - The address is `0x00000000` and the name is `armbian`. Click the path on the right to select `armbian.img` system files.
@@ -322,8 +322,8 @@ armbian-update
 
 | Optional  | Default      | Value          | Description                   |
 | --------- | ------------ | -------------- | ----------------------------- |
-| -k        | latest       | kernel-version | Set the [kernel version](https://github.com/ophub/kernel/releases/tag/kernel_stable) |
-| -t        | automate     | stable/rk3588/h6/flippy/dev  | Set the [kernel tags](https://github.com/ophub/kernel) |
+| -k        | latest       | kernel-version | Set the [kernel version](https://github.com/jerbe/armbian_kernel/releases/tag/kernel_stable) |
+| -t        | automate     | stable/rk3588/h6/flippy/dev  | Set the [kernel tags](https://github.com/jerbe/armbian_kernel) |
 | -m        | no           | yes/no         | Use Mainline u-boot           |
 | -b        | yes          | yes/no         | Automatically backup the current system kernel |
 | -r        | ophub/kernel | `<owner>/<repo>` | Set the repository for downloading kernels from github.com |
@@ -364,7 +364,7 @@ Login in to armbian → input command:
 armbian-software
 ```
 
-Use the `armbian-software -u` command to update the local software center list. According to the user's demand feedback in the [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues), gradually integrate commonly used [software](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf) to achieve one-click install/update/uninstall and other shortcut operations. Including `docker images`, `desktop software`, `application services`, etc. See more [Description](armbian_software.md).
+Use the `armbian-software -u` command to update the local software center list. According to the user's demand feedback in the [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues), gradually integrate commonly used [software](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf) to achieve one-click install/update/uninstall and other shortcut operations. Including `docker images`, `desktop software`, `application services`, etc. See more [Description](armbian_software.md).
 
 ## 12. common problem
 
@@ -394,9 +394,9 @@ It is recommended that you make a backup of the original Android TV system that 
 
 - Under normal circumstances, re-insert the USB hard disk and install it again.
 
-- If you cannot start the Armbian system from the USB hard disk again, connect the Amlogic s9xxx TV Boxes to the computer monitor. If the screen is completely black and there is nothing, you need to restore the Amlogic s9xxx TV Boxes to factory settings first, and then reinstall it. First download the [amlogic_usb_burning_tool](https://github.com/ophub/kernel/releases/tag/tools) system recovery tool and install it. Prepare a [USB dual male data cable](https://user-images.githubusercontent.com/68696949/159267576-74ad69a5-b6fc-489d-b1a6-0f8f8ff28634.png), Prepare a [paper clip](https://user-images.githubusercontent.com/68696949/159267790-38cf4681-6827-4cb6-86b2-19c7f1943342.png).
+- If you cannot start the Armbian system from the USB hard disk again, connect the Amlogic s9xxx TV Boxes to the computer monitor. If the screen is completely black and there is nothing, you need to restore the Amlogic s9xxx TV Boxes to factory settings first, and then reinstall it. First download the [amlogic_usb_burning_tool](https://github.com/jerbe/armbian_kernel/releases/tag/tools) system recovery tool and install it. Prepare a [USB dual male data cable](https://user-images.githubusercontent.com/68696949/159267576-74ad69a5-b6fc-489d-b1a6-0f8f8ff28634.png), Prepare a [paper clip](https://user-images.githubusercontent.com/68696949/159267790-38cf4681-6827-4cb6-86b2-19c7f1943342.png).
 
-- Take x96max+ as an example. Find the two [short-circuit points](https://user-images.githubusercontent.com/68696949/110590933-67785300-81b3-11eb-9860-986ef35dca7d.jpg) on the motherboard, Download the [Android TV system](https://github.com/ophub/kernel/releases/tag/tools). The Android TV system system of other common devices and the corresponding short circuit diagrams can also be [downloaded and viewed here](https://github.com/ophub/kernel/releases/tag/tools).
+- Take x96max+ as an example. Find the two [short-circuit points](https://user-images.githubusercontent.com/68696949/110590933-67785300-81b3-11eb-9860-986ef35dca7d.jpg) on the motherboard, Download the [Android TV system](https://github.com/jerbe/armbian_kernel/releases/tag/tools). The Android TV system system of other common devices and the corresponding short circuit diagrams can also be [downloaded and viewed here](https://github.com/jerbe/armbian_kernel/releases/tag/tools).
 
 ```
 Operation method:
@@ -423,7 +423,7 @@ When the factory reset is completed, the box has been restored to the Android TV
 - Write the system to USB/TF/SD, insert it into the box after writing.
 - Open the developer mode: Settings → About this machine → Version number (for example: X96max plus...), click on the version number for 5 times in quick succession, See the prompt of `Enable Developer Mode` displayed by the system.
 - Turn on USB debugging: System → Advanced options → Developer options again (after entering, confirm that the status is on, and the `USB debugging` status in the list is also on). Enable `ADB` debugging.
-- Install ADB tools: Download [adb](https://github.com/ophub/kernel/releases/tag/tools) and unzip it, copy the three files `adb.exe`, `AdbWinApi.dll`, and `AdbWinUsbApi.dll` to the two files `system32` and `syswow64` under the directory of `c://windows/` Folder, then open the `cmd` command panel, use `adb --version` command, if it is displayed, it is ready to use.
+- Install ADB tools: Download [adb](https://github.com/jerbe/armbian_kernel/releases/tag/tools) and unzip it, copy the three files `adb.exe`, `AdbWinApi.dll`, and `AdbWinUsbApi.dll` to the two files `system32` and `syswow64` under the directory of `c://windows/` Folder, then open the `cmd` command panel, use `adb --version` command, if it is displayed, it is ready to use.
 - Enter the `cmd` command mode. Enter the `adb connect 192.168.1.137` command (the ip is modified according to your box, and you can check it in the router device connected to the box), If the link is successful, it will display `connected to 192.168.1.137:5555`
 - Enter the `adb shell reboot update` command, the box will restart and boot from the USB/TF/SD you inserted, access the system IP address from a browser, or SSH to enter the system.
 
@@ -596,7 +596,7 @@ The u-boot file is an important file to guide the system to start normally.
 
 #### 12.11.1 Extract the bootloader and dtb files
 
-Extraction requires the use of HxD software. You can download it from [Official website download link](https://mh-nexus.de/en/downloads.php?product=HxD20) or [Backup download link](https://github.com/ophub/kernel/releases/download/tools/HxDSetup.2.5.0.0.zip) to get the installation.
+Extraction requires the use of HxD software. You can download it from [Official website download link](https://mh-nexus.de/en/downloads.php?product=HxD20) or [Backup download link](https://github.com/jerbe/armbian_kernel/releases/download/tools/HxDSetup.2.5.0.0.zip) to get the installation.
 
 Execute the following commands in sequence in the `cmd` panel to extract the relevant files and download them to the local computer.
 
@@ -757,7 +757,7 @@ Add the corresponding `BOARD` option to `armbian_board` in [yml workflow control
 
 ### 12.16 12.16 How to fix I/O errors when writing to eMMC
 
-Some devices can start Armbian normally from USB/SD/TF, but will report I/O error when writing to eMMC, such as [Issues](https://github.com/ophub/amlogic-s9xxx-armbian/issues/989), the error content is as follows:
+Some devices can start Armbian normally from USB/SD/TF, but will report I/O error when writing to eMMC, such as [Issues](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/989), the error content is as follows:
 
 ```shell
 [  284.338449] I/O error, dev mmcblk2, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 1 prio class 2
@@ -805,9 +805,9 @@ Take the code snippet in the [dts](https://github.com/unifreq/linux-5.15.y/tree/
 };
 ```
 
-Generally, the problem can be solved by reducing the frequency of `&sd_emmc_c` from `max-frequency = <200000000>;` to `max-frequency = <100000000>;`. If it doesn’t work, you can continue to lower it to `50000000` for testing, and adjust `&sd_emmc_b` to set `USB/SD/TF`, or use `sd-uhs-sdr` to limit the speed. You can get the test file by modifying the dts file and [compiling](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/compile-kernel) it, or you can decompile and modify the existing dtb file to generate the test file by the method introduced in `Chapter 12.13`. The decompiled dtb file is modified using hexadecimal values, where the hexadecimal value of `200000000` in decimal is `0xbebc200`, the hexadecimal value of `100000000` in decimal is `0x5f5e100`, the hexadecimal value of `50000000` in decimal is `0x2faf080`, and the hexadecimal value of `25000000` in decimal is `0x17d7840`.
+Generally, the problem can be solved by reducing the frequency of `&sd_emmc_c` from `max-frequency = <200000000>;` to `max-frequency = <100000000>;`. If it doesn’t work, you can continue to lower it to `50000000` for testing, and adjust `&sd_emmc_b` to set `USB/SD/TF`, or use `sd-uhs-sdr` to limit the speed. You can get the test file by modifying the dts file and [compiling](https://github.com/jerbe/armbian_amlogic-s9xxx/tree/main/compile-kernel) it, or you can decompile and modify the existing dtb file to generate the test file by the method introduced in `Chapter 12.13`. The decompiled dtb file is modified using hexadecimal values, where the hexadecimal value of `200000000` in decimal is `0xbebc200`, the hexadecimal value of `100000000` in decimal is `0x5f5e100`, the hexadecimal value of `50000000` in decimal is `0x2faf080`, and the hexadecimal value of `25000000` in decimal is `0x17d7840`.
 
-In addition to solving problems through the system software layer, you can also use [money ability](https://github.com/ophub/amlogic-s9xxx-armbian/issues/998) and [hands-on ability](https://www.right.com.cn/forum/thread-901586-1-1.html) to solve.
+In addition to solving problems through the system software layer, you can also use [money ability](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/998) and [hands-on ability](https://www.right.com.cn/forum/thread-901586-1-1.html) to solve.
 
 ### 12.17 How to fix the Bullseye version with no sound
 
@@ -818,10 +818,10 @@ Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: dpcm_fe_dai_prepare
 Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: no backend DAIs enabled for fe.dai-link-0
 ```
 
-Please refer to the method in [Bullseye NO Sound](https://github.com/ophub/amlogic-s9xxx-armbian/issues/1000) to set.
+Please refer to the method in [Bullseye NO Sound](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/1000) to set.
 
 ```shell
-wget https://github.com/ophub/kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz
+wget https://github.com/jerbe/armbian_kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz
 tar -xzf bullseye_g12_sound-khadas-utils-4-2-any.tar.gz -C /
 
 systemctl enable sound.service

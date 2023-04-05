@@ -1,6 +1,6 @@
 # Armbian Software Center
 
-According to the user's demand feedback in the [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues), gradually integrate commonly used [software](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf) to achieve one-click install/update/uninstall and other shortcut operations. Including `docker images`, `desktop software`, `application services`, etc.
+According to the user's demand feedback in the [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues), gradually integrate commonly used [software](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf) to achieve one-click install/update/uninstall and other shortcut operations. Including `docker images`, `desktop software`, `application services`, etc.
 
 ## Software introduction
 
@@ -106,13 +106,13 @@ Software Center scripts/commands are centrally stored in the [/usr/share/ophub/a
   - For `complex operations with long instruction contents`, independent script file management is performed. For example, the stand-alone script for installing `frpc` is named `302-frpc.sh` starting with the serial number.
 - `Supported Release`: Set the supported Armbian `System Release`. Use the `@` symbol to separate.
 
-Welcome to add more software. Support requests are welcome in [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues).
+Welcome to add more software. Support requests are welcome in [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues).
 
 
 
 # Armbian 软件中心
 
-根据用户在 [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues) 中的需求反馈，逐步整合常用[软件](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf)，实现一键安装/更新/卸载等快捷操作。包括 `docker 镜像`、`桌面软件`、`应用服务` 等。
+根据用户在 [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues) 中的需求反馈，逐步整合常用[软件](../armbian-files/common-files/usr/share/ophub/armbian-software/software-list.conf)，实现一键安装/更新/卸载等快捷操作。包括 `docker 镜像`、`桌面软件`、`应用服务` 等。
 
 ## 软件介绍
 
@@ -218,5 +218,5 @@ ID    NAME                STATE           MANAGE
   - 对于 `比较复杂、指令内容较长` 的操作，进行独立脚本文件管理。如安装 `frpc` 的独立脚本，以序号开头，命名为 `302-frpc.sh` 。
 - `Supported Release`：设置支持的 Armbian `系统版本`。使用 `@` 符号分割。
 
-欢迎大家补充更多软件。欢迎在 [Issue](https://github.com/ophub/amlogic-s9xxx-armbian/issues) 中提交支持需求。
+欢迎大家补充更多软件。欢迎在 [Issue](https://github.com/jerbe/armbian_amlogic-s9xxx/issues) 中提交支持需求。
 

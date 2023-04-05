@@ -6,7 +6,7 @@
 # warranty of any kind, whether express or implied.
 #
 # This file is a part of the Rebuild Armbian
-# https://github.com/ophub/amlogic-s9xxx-armbian
+# https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Description: Synchronize all service scripts
 # Copyright (C) 2022- https://github.com/unifreq/openwrt_packit
@@ -26,7 +26,7 @@
 # Armbian firmware config info record file
 ophub_release_file="/etc/ophub-release"
 # The openvfd files download repository
-github_repo="https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/build-armbian/armbian-files"
+github_repo="https://github.com/jerbe/armbian_amlogic-s9xxx/tree/main/build-armbian/armbian-files"
 # Operation instruction and service storage path
 sbin_path="/usr/sbin"
 # Software service storage path

@@ -6,7 +6,7 @@
 # warranty of any kind, whether express or implied.
 #
 # This file is a part of the Rebuild Armbian
-# https://github.com/ophub/amlogic-s9xxx-armbian
+# https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Description: Run on x86_64 Ubuntu-22.04(jammy), Compile the kernel.
 # Copyright (C) 2021~ https://www.kernel.org
@@ -63,10 +63,10 @@ custom_name="-ophub"
 package_list="all"
 
 # Cross compile toolchain download mirror
-dev_repo="https://github.com/ophub/kernel/releases/download/dev"
+dev_repo="https://github.com/jerbe/armbian_kernel/releases/download/dev"
 # Arm GNU Toolchain source: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 gun_file="arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz"
-# Armenian file source: https://github.com/ophub/amlogic-s9xxx-armbian/releases
+# Armenian file source: https://github.com/jerbe/armbian_amlogic-s9xxx/releases
 armbian_rootfs_file="armbian.tar.xz"
 # Set the toolchain path
 toolchain_path="/usr/local/toolchain"
