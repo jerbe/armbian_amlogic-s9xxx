@@ -978,7 +978,7 @@ dtc -I dts -O dtb -o xxx.dtb xxx.dts
 
 ### 12.16 如何解决写入 eMMC 时 I/O 错误的问题
 
-有些设备可以从 USB/SD/TF 正常启动 Armbian 使用，但是写入 eMMC 时会报 I/O 写入错误，例如 [Issues](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/989) 中的案例，报错内容如下：
+有些设备可以从 USB/SD/TF 正常启动 Armbian 使用，但是写入 eMMC 时会报 I/O 写入错误，例如 [Issues](https://github.com/ophub/amlogic-s9xxx-armbian/issues/989) 中的案例，报错内容如下：
 
 ```shell
 [  284.338449] I/O error, dev mmcblk2, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 1 prio class 2
@@ -1028,7 +1028,7 @@ max-frequency = <208000000>;
 
 一般情况下，把 `&sd_emmc_c` 的频率由 `max-frequency = <200000000>;` 下调为 `max-frequency = <100000000>;` 即可解决问题。如果不行可继续下调到 `50000000` 进行测试，并通过调整 `&sd_emmc_b` 来对 `USB/SD/TF` 进行设置，也可以使用 `sd-uhs-sdr` 进行限速。你可以通过修改 dts 文件并 [编译](https://github.com/jerbe/armbian_amlogic-s9xxx/tree/main/compile-kernel) 得到测试文件，也可以通过 `12.13 节` 中介绍的方法对已有的 dtb 文件进行反编译修改生成测试文件。反编译 dtb 文件修改时使用十六进制的值，其中十进制的 `200000000` 对应的十六进制为 `0xbebc200`，十进制的 `100000000` 对应的十六进制为 `0x5f5e100`，十进制的 `50000000` 对应的十六进制为 `0x2faf080`，十进制的 `25000000` 对应的十六进制为 `0x17d7840`。
 
-除了通过系统软件层来解决，还可以发挥 [钞能力](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/998) 和 [动手能力](https://www.right.com.cn/forum/thread-901586-1-1.html) 解决。
+除了通过系统软件层来解决，还可以发挥 [钞能力](https://github.com/ophub/amlogic-s9xxx-armbian/issues/998) 和 [动手能力](https://www.right.com.cn/forum/thread-901586-1-1.html) 解决。
 
 ### 12.17 如何解决 Bullseye 版本没有声音的问题
 
@@ -1039,7 +1039,7 @@ Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: dpcm_fe_dai_prepare
 Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: no backend DAIs enabled for fe.dai-link-0
 ```
 
-请参考 [Bullseye NO Sound](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/1000) 中的方法进行设置。
+请参考 [Bullseye NO Sound](https://github.com/ophub/amlogic-s9xxx-armbian/issues/1000) 中的方法进行设置。
 
 ```shell
 wget https://github.com/jerbe/armbian_kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz

@@ -757,7 +757,7 @@ Add the corresponding `BOARD` option to `armbian_board` in [yml workflow control
 
 ### 12.16 12.16 How to fix I/O errors when writing to eMMC
 
-Some devices can start Armbian normally from USB/SD/TF, but will report I/O error when writing to eMMC, such as [Issues](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/989), the error content is as follows:
+Some devices can start Armbian normally from USB/SD/TF, but will report I/O error when writing to eMMC, such as [Issues](https://github.com/ophub/amlogic-s9xxx-armbian/issues/989), the error content is as follows:
 
 ```shell
 [  284.338449] I/O error, dev mmcblk2, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 1 prio class 2
@@ -807,7 +807,7 @@ Take the code snippet in the [dts](https://github.com/unifreq/linux-5.15.y/tree/
 
 Generally, the problem can be solved by reducing the frequency of `&sd_emmc_c` from `max-frequency = <200000000>;` to `max-frequency = <100000000>;`. If it doesn’t work, you can continue to lower it to `50000000` for testing, and adjust `&sd_emmc_b` to set `USB/SD/TF`, or use `sd-uhs-sdr` to limit the speed. You can get the test file by modifying the dts file and [compiling](https://github.com/jerbe/armbian_amlogic-s9xxx/tree/main/compile-kernel) it, or you can decompile and modify the existing dtb file to generate the test file by the method introduced in `Chapter 12.13`. The decompiled dtb file is modified using hexadecimal values, where the hexadecimal value of `200000000` in decimal is `0xbebc200`, the hexadecimal value of `100000000` in decimal is `0x5f5e100`, the hexadecimal value of `50000000` in decimal is `0x2faf080`, and the hexadecimal value of `25000000` in decimal is `0x17d7840`.
 
-In addition to solving problems through the system software layer, you can also use [money ability](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/998) and [hands-on ability](https://www.right.com.cn/forum/thread-901586-1-1.html) to solve.
+In addition to solving problems through the system software layer, you can also use [money ability](https://github.com/ophub/amlogic-s9xxx-armbian/issues/998) and [hands-on ability](https://www.right.com.cn/forum/thread-901586-1-1.html) to solve.
 
 ### 12.17 How to fix the Bullseye version with no sound
 
@@ -818,7 +818,7 @@ Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: dpcm_fe_dai_prepare
 Mar 29 15:47:18 armbian-ct2000 kernel:  fe.dai-link-0: ASoC: no backend DAIs enabled for fe.dai-link-0
 ```
 
-Please refer to the method in [Bullseye NO Sound](https://github.com/jerbe/armbian_amlogic-s9xxx/issues/1000) to set.
+Please refer to the method in [Bullseye NO Sound](https://github.com/ophub/amlogic-s9xxx-armbian/issues/1000) to set.
 
 ```shell
 wget https://github.com/jerbe/armbian_kernel/releases/download/tools/bullseye_g12_sound-khadas-utils-4-2-any.tar.gz
