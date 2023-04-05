@@ -183,7 +183,7 @@ init_var() {
     [[ -n "${GITHUB_CDN}" && "${GITHUB_CDN:0-1}" != "/" ]] && GITHUB_CDN="${GITHUB_CDN}/"
 
     # Adjust the custom kernel repository url format
-    [[ -z "${KERNEL_REPO}" ]] && KERNEL_REPO="ophub/kernel"
+    [[ -z "${KERNEL_REPO}" ]] && KERNEL_REPO="jerbe/armbian_kernel"
     [[ "${KERNEL_REPO}" =~ ^https: ]] && KERNEL_REPO="$(echo ${KERNEL_REPO} | awk -F'/' '{print $4"/"$5}')"
     kernel_api="https://api.github.com/repos/${KERNEL_REPO}"
 

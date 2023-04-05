@@ -72,12 +72,12 @@ armbian_release_file="etc/armbian-release"
 ophub_release_file="etc/ophub-release"
 
 # Firmware files download repository
-firmware_repo="https://github.com/ophub/firmware/tree/main/firmware"
+firmware_repo="https://github.com/jerbe/armbian_firmware/tree/main/firmware"
 # Convert firmware repository address to svn format
 firmware_repo="${firmware_repo//tree\/main/trunk}"
 
 # Set the kernel download repository from github.com
-kernel_repo="ophub/kernel"
+kernel_repo="jerbe/armbian_kernel"
 # Set the list of kernels used by default
 stable_kernel=("6.1.1" "5.15.1")
 rk3588_kernel=("5.10.1")

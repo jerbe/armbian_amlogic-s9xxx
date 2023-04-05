@@ -8,7 +8,7 @@
 
 ## 内核存储库
 
-在 [ophub/kernel](https://github.com/ophub/kernel) 的 [Releases](https://github.com/ophub/kernel/releases) 里有已经编译好的内核。
+在 [jerbe/armbian_kernel](https://github.com/jerbe/armbian_kernel) 的 [Releases](https://github.com/jerbe/armbian_kernel/releases) 里有已经编译好的内核。
 
 ## 本地编译
 

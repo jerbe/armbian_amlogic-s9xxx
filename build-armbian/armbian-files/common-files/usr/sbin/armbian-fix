@@ -160,7 +160,7 @@ echo "[$(date +"%Y.%m.%d.%H:%M:%S")] armbian-fix: Start adjusting custom setting
     }
     # Add default KERNEL_REPO (Kernel download repository)
     [[ -n "$(cat ${ophub_release_file} | grep -E "^KERNEL_REPO=")" ]] || {
-        echo "KERNEL_REPO='ophub/kernel'" >>${ophub_release_file}
+        echo "KERNEL_REPO='jerbe/armbian_kernel'" >>${ophub_release_file}
         echo "84. Add the custom KERNEL_REPO URL"
     }
     # Add default KERNEL_BACKUP (Automatic backup kernel)

@@ -326,7 +326,7 @@ armbian-update
 | -t        | automate     | stable/rk3588/h6/flippy/dev  | Set the [kernel tags](https://github.com/jerbe/armbian_kernel) |
 | -m        | no           | yes/no         | Use Mainline u-boot           |
 | -b        | yes          | yes/no         | Automatically backup the current system kernel |
-| -r        | ophub/kernel | `<owner>/<repo>` | Set the repository for downloading kernels from github.com |
+| -r        | jerbe/armbian_kernel | `<owner>/<repo>` | Set the repository for downloading kernels from github.com |
 | -c        | None         | domain-name    | Set the cdn domain name for accelerated access to github.com  |
 | -s        | None         | None           | [SOS] Restore eMMC with system kernel from USB |
 
@@ -350,7 +350,7 @@ Custom options such as `-r`/`-t`/`-b`/`-c` can be fixed to the relevant paramete
 
 ```shell
 # Customize the value of the modification parameter
--r  :  KERNEL_REPO='ophub/kernel'
+-r  :  KERNEL_REPO='jerbe/armbian_kernel'
 -t  :  KERNEL_TAGS='stable'
 -b  :  KERNEL_BACKUP='yes'
 -c  :  GITHUB_CDN='https://gh...xy.com/'

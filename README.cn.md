@@ -72,7 +72,7 @@ armbian-update
 | -t       | 自动化        | stable/rk3588/h6/flippy/dev | 设置[内核 tags](https://github.com/jerbe/armbian_kernel)     |
 | -m       | no           | yes/no        | 使用主线 u-boot     |
 | -b       | yes          | yes/no        | 更新内核时自动备份当前系统使用的内核    |
-| -r       | ophub/kernel | `<owner>/<repo>` | 设置从 github.com 下载内核的仓库  |
+| -r       | jerbe/armbian_kernel | `<owner>/<repo>` | 设置从 github.com 下载内核的仓库  |
 | -c       | 无           | 自定义域名      | 设置加速访问 github.com 的 cdn 域名  |
 | -s       | 无           | 无             | [SOS] 使用 USB 中的系统内核恢复 eMMC |
 
@@ -173,7 +173,7 @@ sudo apt-get install -y $(cat compile-kernel/tools/script/ubuntu2204-build-armbi
 | -b   | Board      | 指定电视盒子型号，如 `-b s905x3` . 多个型号使用 `_` 进行连接，如 `-b s905x3_s905d` . 使用 `all` 表示全部型号。型号代码详见 [model_database.conf](build-armbian/armbian-files/common-files/etc/model_database.conf) 中的 `BOARD` 设置。 |
 | -k   | Kernel     | 指定 [kernel](https://github.com/jerbe/armbian_kernel/releases/tag/kernel_stable) 名称，如 `-k 5.10.125` . 多个内核使用 `_` 进行连接，如 `-k 5.10.125_5.15.50` 。通过 `-k` 参数自由指定的内核版本只对使用 `stable` 的内核有效，其他例如 `rk3588` 等内核由 [model_database.conf](build-armbian/armbian-files/common-files/etc/model_database.conf) 文件指定。  |
 | -a   | AutoKernel | 设置是否自动采用同系列最新版本内核。当为 `true` 时，将自动在内核库中查找在 `-k` 中指定的内核如 5.10.125 的同系列是否有更新的版本，如有 5.10.125 之后的最新版本时，将自动更换为最新版。设置为 `false` 时将编译指定版本内核。默认值：`true` |
-| -r   | KernelRepo | 指定 github.com 内核仓库的 `<owner>/<repo>`，如 `ophub/kernel` |
+| -r   | KernelRepo | 指定 github.com 内核仓库的 `<owner>/<repo>`，如 `jerbe/armbian_kernel` |
 | -s   | Size       | 对系统的 ROOTFS 分区大小进行设置，默认大小为 2560MiB, 系统大小必须大于 2048MiB. 例如： `-s 2560` |
 | -t   | RootfsType | 对系统的 ROOTFS 分区的文件系统类型进行设置，默认为 `ext4` 类型，可选项为 `ext4` 或 `btrfs` 类型。例如： `-t btrfs` |
 | -n   | CustomName | 设置系统名称中的签名部分。默认值为空。可根据需要添加签名如 `_server`，`_gnome_desktop` 或 `_ophub` 等，设置自定义签名时请勿包含空格。 |
@@ -219,7 +219,7 @@ sudo apt-get install -y $(cat compile-kernel/tools/script/ubuntu2204-build-armbi
 | armbian_board    | all               | 设置打包盒子的 `board` ，功能参考 `-b`                 |
 | armbian_kernel   | 6.1.1_5.15.1      | 设置内核 [版本](https://github.com/jerbe/armbian_kernel/releases/tag/kernel_stable)，功能参考 `-k` |
 | auto_kernel      | true              | 设置是否自动采用同系列最新版本内核，功能参考 `-a`       |
-| kernel_repo      | ophub/kernel      | 指定 github.com 内核仓库的 `<owner>/<repo>`，功能参考 `-r` |
+| kernel_repo      | jerbe/armbian_kernel      | 指定 github.com 内核仓库的 `<owner>/<repo>`，功能参考 `-r` |
 | armbian_size     | 2560              | 设置系统 ROOTFS 分区的大小，功能参考 `-s`            |
 | armbian_fstype   | ext4              | 设置系统 ROOTFS 分区的文件系统类型，功能参考 `-t`     |
 | armbian_sign     | 无                | 设置系统名称中的签名部分，功能参考 `-n`               |

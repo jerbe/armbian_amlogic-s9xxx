@@ -8,7 +8,7 @@ You can adjust the configuration of the kernel as needed, such as adding drivers
 
 ## Kernel Repository
 
-There are compiled kernels in [Releases](https://github.com/ophub/kernel/releases) of [ophub/kernel](https://github.com/ophub/kernel).
+There are compiled kernels in [Releases](https://github.com/jerbe/armbian_kernel/releases) of [jerbe/armbian_kernel](https://github.com/jerbe/armbian_kernel).
 
 ## Local compilation
 

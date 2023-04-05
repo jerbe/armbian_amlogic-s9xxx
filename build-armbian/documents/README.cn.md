@@ -336,7 +336,7 @@ armbian-update
 | -t       | 自动化        | stable/rk3588/h6/flippy/dev | 设置[内核 tags](https://github.com/jerbe/armbian_kernel)     |
 | -m       | no           | yes/no        | 使用主线 u-boot     |
 | -b       | yes          | yes/no        | 更新内核时自动备份当前系统使用的内核    |
-| -r       | ophub/kernel | `<owner>/<repo>` | 设置从 github.com 下载内核的仓库  |
+| -r       | jerbe/armbian_kernel | `<owner>/<repo>` | 设置从 github.com 下载内核的仓库  |
 | -c       | 无           | 自定义域名      | 设置加速访问 github.com 的 cdn 域名  |
 | -s       | 无           | 无             | [SOS] 使用 USB 中的系统内核恢复 eMMC |
 
@@ -360,7 +360,7 @@ armbian-update
 
 ```shell
 # 自定义修改参数的赋值
--r  :  KERNEL_REPO='ophub/kernel'
+-r  :  KERNEL_REPO='jerbe/armbian_kernel'
 -t  :  KERNEL_TAGS='stable'
 -b  :  KERNEL_BACKUP='yes'
 -c  :  GITHUB_CDN='https://gh...xy.com/'
