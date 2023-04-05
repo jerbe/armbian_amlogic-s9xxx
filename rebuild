@@ -11,8 +11,8 @@
 # Description: Run on x86_64 Ubuntu-20.04/22.04, Rebuild armbian.
 # Copyright (C) 2021~ https://www.armbian.com
 # Copyright (C) 2021~ https://github.com/unifreq
-# Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-armbian/blob/main/CONTRIBUTORS.md
-# Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2023~ https://github.com/jerbe/armbian_amlogic-s9xxx/blob/main/CONTRIBUTORS.md
+# Copyright (C) 2023~ https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: sudo ./rebuild
 # Command optional parameters please refer to the source code repository

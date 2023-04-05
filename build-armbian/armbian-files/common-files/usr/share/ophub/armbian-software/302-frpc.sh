@@ -10,7 +10,7 @@
 #
 # Function: Execute software install/update/uninstall script
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: ${0} <install/update/remove>
 # Example: ${0} install

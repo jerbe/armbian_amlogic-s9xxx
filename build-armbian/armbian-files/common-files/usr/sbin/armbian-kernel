@@ -10,7 +10,7 @@
 #
 # Description: Run on Armbian, Compile the kernel.
 # Copyright (C) 2021- https://github.com/unifreq
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: armbian-kernel
 # Command optional parameters please refer to the source code repository
@@ -104,7 +104,7 @@ help_info() {
     -k : Kernel       Set the kernel name, such as [ -k 5.10.100 ]
     -p : PackageList  Set the package list for compiling the kernel, such as [ -p dtbs ], Optional: [ dtbs/all ]
     -t : Toolchain    Set the compilation toolchain, such as [ -t gcc ], Optional: [ gcc/clang ]
-    -n : CustomName   Set the kernel custom signature, such as [ -n -ophub ]
+    -n : CustomName   Set the kernel custom signature, such as [ -n -jerbe ]
     -a : AutoKernel   Set whether to automatically compile the latest version, such as [ -a true ], Optional: [ true/false ]
     -r : Repository   Set the kernel source code repository, such as [ -r owner/repo@branch ]
 

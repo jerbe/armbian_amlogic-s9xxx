@@ -10,7 +10,7 @@
 #
 # Function: Execute desktop software install/update/remove command
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: command-desktop.sh -s <software_id> -m <install/update/remove>
 # Example: command-desktop.sh -s 201 -m install

@@ -10,7 +10,7 @@
 #
 # Function: Desktop system install Chinese support
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: sudo ./201-desktop-chinese-fonts.sh
 #

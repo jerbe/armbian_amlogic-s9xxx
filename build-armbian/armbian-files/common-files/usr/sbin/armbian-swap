@@ -10,7 +10,7 @@
 #
 # Function: Create swap for armbian system
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: armbian-swap 1
 # The input parameter unit is GiB, the default is 1

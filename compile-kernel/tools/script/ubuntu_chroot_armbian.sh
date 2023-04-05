@@ -10,7 +10,7 @@
 #
 # Description: Run on Armbian, generate uInitrd.
 # Copyright (C) 2021- https://github.com/unifreq
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 #===================== Set make environment variables =====================
 #

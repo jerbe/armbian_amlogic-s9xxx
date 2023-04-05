@@ -11,7 +11,7 @@
 # Function: Install armbian to eMMC
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
 # Copyright (C) 2022- https://github.com/7Ji/ampart
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: armbian-install
 # Optional parameter meaning: -m = ues Mainline_u-boot

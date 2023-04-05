@@ -279,5 +279,5 @@ The `kernel` / `u-boot` and other resources used by this system are mainly copie
 
 ## License
 
-The amlogic-s9xxx-armbian © OPHUB is licensed under [GPL-2.0](LICENSE)
+The armbian_amlogic-s9xxx © JERBE is licensed under [GPL-2.0](LICENSE)
 

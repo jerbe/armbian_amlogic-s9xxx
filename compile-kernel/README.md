@@ -2,7 +2,7 @@
 
 View Chinese description  |  [查看中文说明](README.cn.md)
 
-This kernel can be used in `Armbian` and `OpenWrt` systems. For example [amlogic-s9xxx-armbian](https://github.com/jerbe/armbian_amlogic-s9xxx), [amlogic-s9xxx-openwrt](https://github.com/jerbe/openwrt_amlogic-s9xxx), [flippy-openwrt-actions](https://github.com/ophub/flippy-openwrt-actions) and [unifreq/openwrt_packit](https://github.com/unifreq/openwrt_packit). It can be integrated when compiling firmware, or it can be installed into an existing system for use.
+This kernel can be used in `Armbian` and `OpenWrt` systems. For example [armbian_amlogic-s9xxx](https://github.com/jerbe/armbian_amlogic-s9xxx), [openwrt_amlogic-s9xxx](https://github.com/jerbe/openwrt_amlogic-s9xxx), [openwrt_packit-flippy](https://github.com/jerbe/openwrt_packit-flippy) and [unifreq/openwrt_packit](https://github.com/unifreq/openwrt_packit). It can be integrated when compiling firmware, or it can be installed into an existing system for use.
 
 You can adjust the configuration of the kernel as needed, such as adding drivers and patches. It is also possible to compile personalized signature kernels with special meanings according to mood, such as `5.10.95-happy-new-year`, `5.10.96-beijing-winter-olympics`, `5.10.99-valentines-day` and so on.
 
@@ -41,7 +41,7 @@ sudo apt-get install -y $(cat compile-kernel/tools/script/ubuntu2204-build-armbi
 | -a        | AutoKernel  | Set whether to automatically adopt the latest version of the kernel of the same series. When it is `true`, it will automatically find whether there is a newer version of the kernel specified in `-k` such as `5.15.100` of the series. If there is the latest version after `5.15.100`, it will be automatically replaced with the latest version . When set to `false`, the specified version of the kernel will be compiled. Default value: `true` |
 | -p        | PackageList | Set the package list for compiling the kernel. The default value is `all`, which will compile all files of `Image, modules, dtbs`. When set to `dtbs` only 3 dtbs files are compiled. |
 | -t        | Toolchain   | Set the compilation toolchain. The default value is `gcc`, Options: `clang / gcc` |
-| -n        | CustomName  | Set the kernel custom signature. The default value is `-ophub` and the generated kernel is `5.15.100-ophub`. Do not include spaces when setting a custom signature. |
+| -n        | CustomName  | Set the kernel custom signature. The default value is enpty and the generated kernel is `5.15.100`. Do not include spaces when setting a custom signature. |
 | -r        | Repository  | Specifies the source code repository for the compiled kernel. Defaults to `unifreq` . You can choose the source code repository of `github.com`. For example `-r unifreq`, etc., The parameter format can be set to the three-item combination of `owner/repo@branch` , The owner name `owner` in the parameters is a required parameter, the kernel source code repository name `/repo` and the repository branch name `@branch` are optional parameters. When only the owner name `owner` parameter is specified, it will automatically match kernel source code repositories whose owner's name is in `linux-5.x.y` format and branch is `main`. If the repository name or branch name is different, use a combination, such as `owner@branch` or `owner/repo` or `owner/repo@branch` |
 
 - `sudo ./recompile`: Use the default configuration to compiled kernel.
@@ -88,7 +88,7 @@ The relevant parameters correspond to the `local compilation commands`, please r
 | kernel_auto      | true             | Set whether to automatically adopt the latest kernel version of the same series. The default value is `true`. Function reference `-a` |
 | kernel_package   | all              | Set the package list for compiling the kernel. The default is `all`. Function reference `-p` |
 | kernel_toolchain | gcc              | Set the compilation toolchain. The default is `gcc`. Function reference `-t` |
-| kernel_sign      | -ophub           | Set the kernel custom signature. The default is `-ophub`. Function reference `-n` |
+| kernel_sign      |            | Set the kernel custom signature. The default is empty. Function reference `-n` |
 | kernel_source    | unifreq          | Specifies the source code repository for the compiled kernel. The default is `unifreq` . Function reference `-r` |
 | kernel_config    | None             | The default uses the configuration templates in the [tools/config](tools/config) directory. You can set the directory where the compiled kernel configuration files are stored in your repository, such as `kernel/config_path` . configuration templates stored in this directory must be named after the major version of the kernel, such as `config-5.10`, `config-5.15`, etc. |
 

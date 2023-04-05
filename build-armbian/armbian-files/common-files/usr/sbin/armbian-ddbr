@@ -11,7 +11,7 @@
 # Description: Backup and restore the system in emmc
 # Copyright (C) 2017- The function borrowed from ddbr, Author: xXx
 # Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2021- https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: armbian-ddbr
 #

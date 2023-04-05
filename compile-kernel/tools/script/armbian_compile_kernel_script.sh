@@ -11,7 +11,7 @@
 # Description: Run on Armbian, Compile the kernel.
 # Copyright (C) 2021~ https://www.kernel.org
 # Copyright (C) 2021~ https://github.com/unifreq
-# Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-armbian
+# Copyright (C) 2023~ https://github.com/jerbe/armbian_amlogic-s9xxx
 #
 # Command: armbian-kernel
 # Command optional parameters please refer to the source code repository
@@ -56,7 +56,7 @@ repo_owner="unifreq"
 repo_branch="main"
 build_kernel=("6.1.1" "5.15.1")
 auto_kernel="true"
-custom_name="-ophub"
+custom_name=""
 # Set the kernel compile object, options: dtbs / all
 package_list="all"
 
