@@ -158,6 +158,7 @@ jobs:
 
       - name: Rebuild Armbian
         uses: jerbe/armbian_amlogic-s9xxx@main
+        secrets: inherit
         if: ${{ env.ARMBIAN_URL }} != '' && !cancelled()
         with:
           build_target: armbian

@@ -91,6 +91,7 @@ jobs:
 
       - name: Compile the kernel
         uses: jerbe/armbian_amlogic-s9xxx@main
+        secrets: inherit
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
         with:
           build_target: kernel
