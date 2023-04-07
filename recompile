@@ -311,10 +311,11 @@ get_kernel_source() {
             echo -e "${INFO} Local tag list not match '${version_tag}', well fetch from remote"
             git fetch origin tag "${version_tag}"
             [[ "${?}" -eq "0" ]] || error_msg "Fetch from remote origin tag failed"
-        else
-            echo -e "${INFO} Has local tag '${version_tag}', checkout to ${version_tag}" 
-            git checkout ${version_tag}
         fi
+        
+        echo -e "${INFO} Has local tag '${version_tag}', checkout to ${version_tag}" 
+        git checkout ${version_tag}
+        
 
         unset kernel_version
         kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${kernel_sub}"
