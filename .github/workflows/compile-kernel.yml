@@ -13,9 +13,10 @@ on:
       kernel_source:
         description: "Select the kernel source"
         required: false
-        default: "unifreq"
+        default: "jerbe"
         type: choice
         options:
+          - jerbe
           - unifreq
       kernel_version:
         description: "Select kernel version"

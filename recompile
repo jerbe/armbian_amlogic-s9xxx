@@ -54,6 +54,8 @@ arch_info="$(uname -m)"
 host_release="$(cat /etc/os-release | grep '^VERSION_CODENAME=.*' | cut -d'=' -f2)"
 
 # Set the default for downloading kernel sources from github.com
+# 
+# repo_owner="unifreq"
 repo_owner="unifreq"
 repo_branch="main"
 build_kernel=("6.1.1" "5.15.1")
@@ -156,6 +158,14 @@ init_var() {
         esac
         shift
     done
+
+    echo -e "${INFO} build_kernel=${build_kernel}\n"
+    echo -e "${INFO} auto_kernel=${auto_kernel}\n"
+    echo -e "${INFO} custom_name=${custom_name}\n"
+    echo -e "${INFO} package_list=${package_list}\n"
+    echo -e "${INFO} repo_owner=${repo_owner}\n"
+    echo -e "${INFO} toolchain_name=${toolchain_name}\n"
+
 
     # Receive the value entered by the [ -r ] parameter
     input_r_value="${repo_owner//https\:\/\/github\.com\//}"
@@ -272,28 +282,50 @@ get_kernel_source() {
         echo -e "${INFO} Start cloning from [ https://github.com/${server_kernel_repo} -b ${code_branch} ]"
         git clone -q --single-branch --depth=1 --branch=${code_branch} https://github.com/${server_kernel_repo} ${kernel_path}/${local_kernel_path}
         [[ "${?}" -eq "0" ]] || error_msg "[ https://github.com/${server_kernel_repo} ] Clone failed."
-    else
-        # Get a local kernel version
-        local_makefile="${kernel_path}/${local_kernel_path}/Makefile"
-        local_makefile_version="$(cat ${local_makefile} | grep -oE "VERSION =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
-        local_makefile_patchlevel="$(cat ${local_makefile} | grep -oE "PATCHLEVEL =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
-        local_makefile_sublevel="$(cat ${local_makefile} | grep -oE "SUBLEVEL =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
+    fi    
+    
 
-        # Local version and server version comparison
-        if [[ "${auto_kernel}" == "true" && "${kernel_sub}" -gt "${local_makefile_sublevel}" ]]; then
-            # Pull the latest source code of the server
-            cd ${kernel_path}/${local_kernel_path}
-            git checkout ${code_branch} && git reset --hard origin/${code_branch} && git pull
-            unset kernel_version
-            kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${kernel_sub}"
-            echo -e "${INFO} Synchronize the upstream source code, compile the kernel version [ ${kernel_version} ]."
+
+    # Get a local kernel version if "${kernel_path}/${local_kernel_path}" is exist
+    local_makefile="${kernel_path}/${local_kernel_path}/Makefile"
+    local_makefile_version="$(cat ${local_makefile} | grep -oE "VERSION =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
+    local_makefile_patchlevel="$(cat ${local_makefile} | grep -oE "PATCHLEVEL =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
+    local_makefile_sublevel="$(cat ${local_makefile} | grep -oE "SUBLEVEL =.*" | head -n 1 | grep -oE '[0-9]{1,3}')"
+
+
+    # Local version and server version comparison
+    if [[ "${auto_kernel}" == "true" && "${kernel_sub}" -gt "${local_makefile_sublevel}" ]]; then
+        # Pull the latest source code of the server
+        cd ${kernel_path}/${local_kernel_path}
+        git checkout ${code_branch} && git reset --hard origin/${code_branch} && git pull
+        unset kernel_version
+        kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${kernel_sub}"
+        echo -e "${INFO} Synchronize the upstream source code, compile the kernel version [ ${kernel_version} ]."
+    elif [[ "${auto_kernel}" == "false" && "${kernel_sub}" -gt "1" && "${kernel_sub}" -lt "${local_makefile_sublevel}" ]]; then
+        cd ${kernel_path}/${local_kernel_path}
+        # Check local version tag
+        version_tag="v${local_makefile_version}.${local_makefile_patchlevel}.${kernel_sub}"
+        has_tag="$(git tag -l|grep -oE "${version_tag}")"
+
+        if [[ -z ${has_tag} ]]; then
+            echo -e "${INFO} Local tag list not match '${version_tag}', well fetch from remote"
+            git fetch origin tag "${version_tag}"
+            [[ "${?}" -eq "0" ]] || error_msg "Fetch from remote origin tag failed"
         else
-            # Reset to local kernel version number
-            unset kernel_version
-            kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${local_makefile_sublevel}"
-            echo -e "${INFO} Use local source code, compile the kernel version [ ${kernel_version} ]."
+            echo -e "${INFO} Has local tag '${version_tag}', checkout to ${version_tag}" 
+            git checkout ${version_tag}
         fi
+
+        unset kernel_version
+        kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${kernel_sub}"
+        echo -e "${INFO} Synchronize the upstream source code, compile the kernel version [ ${kernel_version} ]."
+    else
+        # Reset to local kernel version number
+        unset kernel_version
+        kernel_version="${local_makefile_version}.${local_makefile_patchlevel}.${local_makefile_sublevel}"
+        echo -e "${INFO} Use local source code, compile the kernel version [ ${kernel_version} ]."
     fi
+    
 }
 
 headers_install() {
